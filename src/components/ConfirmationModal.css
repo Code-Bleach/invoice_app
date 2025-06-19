@@ -1,0 +1,57 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000; /* Ensure it's on top */
+}
+
+.modal-content {
+  background-color: white;
+  padding: 25px 30px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 400px; /* Adjust as needed */
+  text-align: left;
+  color: #0c0e16; /* Dark text for modal content */
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+.modal-content p {
+  margin-bottom: 25px;
+  line-height: 1.6;
+  color: #888eb0; /* Lighter text for message */
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end; /* Align buttons to the right */
+  gap: 10px;
+}
+
+.modal-actions .button-secondary {
+  background-color: #f9fafe; /* Light greyish blue - matches add item button */
+  color: #7e88c3; /* Darker text */
+}
+.modal-actions .button-secondary:hover {
+  background-color: #dfe3fa;
+}
+
+.modal-actions .button-danger {
+  background-color: #ec5757; /* Red */
+  color: white;
+}
+.modal-actions .button-danger:hover {
+  background-color: #ff9797; /* Lighter red */
+}

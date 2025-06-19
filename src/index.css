@@ -1,0 +1,77 @@
+:root {
+  font-family: 'League Spartan', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* color-scheme: light dark; */ /* Controlled by our theme variables now */
+  /* color: rgba(255, 255, 255, 0.87); */ /* Controlled by theme */
+  /* background-color: #242424; */ /* Controlled by theme */
+  
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: var(--sidebar-logo-bg); /* Use theme variable for links */
+  text-decoration: inherit;
+}
+a:hover {
+  color: #9277ff; /* Lighter purple for hover */
+}
+
+body {
+  margin: 0;
+  /* background-color: #f8f8fb; */ /* This is now handled by AppLayout.css with CSS variables */
+  /* display: flex; */ /* Not needed for the overall body if app-container handles layout */
+  /* place-items: center; */ /* Not needed */
+  min-width: 320px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: 'League Spartan', sans-serif; /* Ensure consistent font */
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+/* General button styling - can be overridden by more specific classes */
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: 'League Spartan', inherit; /* Ensure font */
+  /* background-color: #1a1a1a; */ /* Remove default dark background */
+  cursor: pointer;
+  transition: border-color 0.25s;
+  background-color: var(--background-content); /* Default to content background */
+  color: var(--text-secondary); /* Default text color */
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: none; /* Remove default browser outline */
+  /* Optionally, add a custom focus style, e.g., a subtle box-shadow or border change if desired for accessibility */
+}
+
+/* @media (prefers-color-scheme: light) { */ /* We handle themes with classes, not prefers-color-scheme directly here */
+  :root {
+    /* color: #213547; */
+    /* background-color: #ffffff; */
+  }
+  a:hover {
+    /* color: #747bff; */
+  }
+  button {
+    /* background-color: #f9f9f9; */
+  }
+/* } */

@@ -1,0 +1,30 @@
+/* src/components/Header.css */
+.invoice-header {
+  /* This class is on the <header> element itself */
+  /* No specific padding/margin here by default, 
+     let the parent (.new-invoice-form) control spacing around this block */
+}
+
+.invoice-header h1 {
+  font-size: 24px; /* Matches invoice-tediko */
+  line-height: 32px; /* Matches invoice-tediko */
+  letter-spacing: -0.5px; /* Matches invoice-tediko */
+  font-weight: bold;
+  color: var(--color-text-primary);
+  margin-top: 0; /* Crucial: Reset top margin */
+  margin-bottom: 0; /* Crucial: Reset bottom margin. Spacing after the header block is handled by its parent. */
+}
+
+.theme-dark .invoice-header h1 {
+  color: var(--color-text-primary-dark);
+}
+
+/* Styles for invoiceNumber if displayed in header, not typically used in form title */
+.invoice-header div { /* If you were to show #ID here */
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+.theme-dark .invoice-header div {
+  color: var(--color-text-secondary-dark);
+}

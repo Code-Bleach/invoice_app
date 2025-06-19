@@ -1,0 +1,99 @@
+.global-side-nav {
+  background-color: var(--sidebar-bg);
+  color: white;
+  width: 103px; /* Width from invoice-tediko */
+  height: 100vh; /* Full viewport height */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Pushes nav-top up and nav-bottom down */
+  align-items: center;
+  position: fixed; /* Fixed position on the left */
+  top: 0;
+  left: 0;
+  z-index: 1000; /* Ensure it's on top of other content */
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.global-side-nav .nav-top {
+  width: 100%;
+}
+
+.global-side-nav .logo-link {
+  display: block; /* Makes the container clickable */
+  text-decoration: none; /* Removes underline */
+}
+
+.global-side-nav .logo-container {
+  background-color: var(--sidebar-logo-bg);
+  width: 100%;
+  height: 103px; /* Square, same as width */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px; /* This makes the purple part fully rounded on the right */
+}
+
+.logo-container {
+  width: 100%; /* Full width of the top section of nav */
+  height: 103px; /* Matches invoice-tediko */
+  background-color: var(--color-primary, #7C5DFA); /* Primary purple */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 20px 20px 0; /* Rounded corners on the right */
+  position: relative; /* For pseudo-element if needed for bottom curve */
+}
+
+.app-logo-img {
+  width: 40px; /* Adjust as needed */
+  height: auto; /* Maintain aspect ratio */
+  /* Add any other styling like margin if needed */
+}
+
+.global-side-nav .nav-bottom {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.global-side-nav .theme-toggle-container {
+  padding: 20px 0;
+}
+
+.theme-button {
+  background: none;
+  border: none;
+  color: var(--sidebar-icon-color);
+  cursor: pointer;
+  font-size: 1.5rem; /* Adjust icon size */
+}
+.theme-button:hover .icon-placeholder {
+  color: var(--sidebar-icon-hover-color);
+}
+
+.icon-placeholder { /* General styling for text-based icon placeholders */
+  display: inline-block;
+}
+
+.global-side-nav .profile-container {
+  padding: 24px 0;
+  border-top: 1px solid var(--sidebar-separator-color);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.avatar-placeholder { /* Style your avatar here */
+  width: 40px;
+  height: 40px;
+  background-color: var(--sidebar-icon-hover-color); /* Light grey */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sidebar-icon-color); /* Darker text for AV */
+  font-weight: bold;
+}

@@ -1,0 +1,72 @@
+/* c:\Users\hp\Desktop\Parable\Projects\BarMiConstruction\invoice_app\src\components\ServicesSection.css */
+
+/* Styles for View Mode */
+/* Target the section when it's NOT in form mode */
+.services-section:not(.form-section) { 
+  margin-top: 20px; /* Space above this section */
+  margin-bottom: 20px; /* Space below this section */
+  padding: 24px; /* Padding inside the section */
+  background-color: var(--color-invoice-item-bg, #F9FAFE); /* Light background like item list */
+  border-radius: 8px; /* Rounded corners */
+  font-size: 13px; /* 0.8125rem */
+  color: var(--color-text-secondary, #7E88C3);
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.theme-dark .services-section:not(.form-section) {
+  background-color: var(--color-invoice-item-bg-dark, #252945);
+}
+
+.services-section:not(.form-section) h2 { /* "Services Provided" title */
+  font-size: 13px; /* 0.8125rem */
+  color: var(--color-text-secondary, #7E88C3);
+  margin-bottom: 10px;
+  font-weight: bold;
+  text-transform: uppercase; /* Often uppercase in invoice-tediko */
+}
+
+.theme-dark .services-section:not(.form-section) h2 {
+  color: var(--color-text-secondary-dark, #DFE3FA);
+}
+
+.services-section:not(.form-section) .services-description-display { /* The <pre> tag */
+  font-size: 12px; /* 0.75rem */
+  color: var(--color-text-primary, #0C0E16);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  font-family: inherit;
+  margin-bottom: 10px;
+}
+
+.theme-dark .services-section:not(.form-section) .services-description-display {
+  color: var(--color-text-primary-dark, #FFFFFF);
+}
+
+.services-section:not(.form-section) p { /* Container for Service Charge line */
+  display: flex; /* Use flex to align label and value */
+  justify-content: space-between; /* Push label and value apart */
+}
+
+.services-section:not(.form-section) p strong { /* "Service Charge:" label */
+  font-weight: 500;
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--color-text-primary, #0C0E16);
+}
+
+.services-section:not(.form-section) p span { /* Service charge value */
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.form-section h2{
+  color: var(--color-text-secondary, #777f98);
+}
+.theme-dark .services-section:not(.form-section) p span {
+  color: var(--color-text-primary-dark);
+ }
+
+.theme-dark .services-section:not(.form-section) p {
+  color: var(--color-text-primary-dark, #FFFFFF);
+}

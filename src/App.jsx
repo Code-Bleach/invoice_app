@@ -1,0 +1,92 @@
+import React, { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import InvoiceListPage from './InvoiceListPage';
+import InvoiceDetailPage from './InvoiceDetailPage'; // Assuming this is the correct detail page
+import GlobalSideNav from './components/GlobalSideNav'; // Import the new component
+import './AppLayout.css'; // CSS for the overall app layout
+
+const LOCAL_STORAGE_KEY_INVOICES = 'appInvoices';
+const LOCAL_STORAGE_KEY_THEME = 'appTheme';
+
+const getInitialInvoices = () => {
+  const savedInvoices = localStorage.getItem(LOCAL_STORAGE_KEY_INVOICES);
+  return savedInvoices ? JSON.parse(savedInvoices) : [];
+};
+
+function App() {
+  const [invoices, setInvoices] = useState(getInitialInvoices);
+  const [theme, setTheme] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEY_THEME) || 'light'); // 'light' or 'dark'
+
+  const addInvoice = (newInvoiceData) => {
+    // For a real app, generate a unique ID (e.g., using a library like uuid)
+    const newInvoiceWithId = { 
+      ...newInvoiceData, 
+      id: `INV-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`, // Simple unique ID
+    };
+    setInvoices(prevInvoices => {
+      const updatedInvoices = [...prevInvoices, newInvoiceWithId];
+      console.log("All invoices after adding:", updatedInvoices); // For debugging, logs the new state
+      return updatedInvoices;
+    });
+    console.log("New invoice added with ID:", newInvoiceWithId.id); // For debugging
+    return newInvoiceWithId; // Return the newly created invoice with its ID
+  };
+
+  const updateInvoice = (updatedInvoiceData) => {
+    setInvoices(prevInvoices => 
+      prevInvoices.map(inv => inv.id === updatedInvoiceData.id ? updatedInvoiceData : inv)
+    );
+    console.log("Invoice updated:", updatedInvoiceData);
+  };
+
+  const deleteInvoice = (invoiceIdToDelete) => {
+    setInvoices(prevInvoices => 
+      prevInvoices.filter(inv => inv.id !== invoiceIdToDelete)
+    );
+    console.log("Invoice deleted:", invoiceIdToDelete);
+  };
+
+  const markInvoiceAsPaid = (invoiceIdToMark) => {
+    setInvoices(prevInvoices =>
+      prevInvoices.map(inv => 
+        inv.id === invoiceIdToMark ? { ...inv, status: 'paid' } : inv
+      )
+    );
+    console.log("Invoice marked as paid:", invoiceIdToMark);
+  };
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+
+  // Effect to save invoices to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY_INVOICES, JSON.stringify(invoices));
+  }, [invoices]);
+
+  // Effect to save theme to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY_THEME, theme);
+  }, [theme]);
+
+  return (
+    <div className={`app-container theme-${theme}`}>
+      <GlobalSideNav currentTheme={theme} toggleTheme={toggleTheme} />
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={<InvoiceListPage invoices={invoices} />} />
+          <Route 
+            path="/invoice/new" 
+    element={<InvoiceDetailPage addInvoice={addInvoice} invoices={invoices} updateInvoice={updateInvoice} deleteInvoice={deleteInvoice} markInvoiceAsPaid={markInvoiceAsPaid} theme={theme} />}
+          />
+          <Route 
+            path="/invoice/:invoiceId" 
+    element={<InvoiceDetailPage invoices={invoices} addInvoice={addInvoice} updateInvoice={updateInvoice} deleteInvoice={deleteInvoice} markInvoiceAsPaid={markInvoiceAsPaid} theme={theme} />}
+          />
+        </Routes> 
+      </main>
+    </div>
+  );
+}
+
+export default App;

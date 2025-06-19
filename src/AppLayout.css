@@ -1,0 +1,126 @@
+
+/* Define CSS variables for theming */
+:root {
+  --background-main: #f8f8fb;
+  --background-content: #ffffff;
+
+  --color-dropdown-bg: #FFFFFF;
+  --color-checkbox-border: #DFE3FA;
+  --color-checkbox-bg: #DFE3FA;
+  --color-primary: #7C5DFA; /* Purple */
+  --color-text-primary: #0C0E16;
+  --color-button-discard-bg: #F9FAFE;
+  --color-button-discard-text: #7E88C3;
+  --color-button-draft-bg: #373B53;
+  --color-button-draft-text: #DFE3FA; /* Or a lighter gray for light theme */
+  --color-primary: #7C5DFA;
+  --color-primary-light: #9277FF; /* For hover */
+  --color-button-text-light: #FFFFFF;
+  
+  --color-form-bg: #FFFFFF;
+  --color-form-bg-dark: #141625; /* Or #1E2139 if you prefer */
+  --color-invoice-bg: #FFFFFF;
+  --color-invoice-bg-dark: #1E2139;
+  --color-text-primary: #0C0E16;
+  --color-text-primary-dark: #FFFFFF;
+  --color-text-secondary: #7E88C3;
+  --color-text-secondary-dark: #DFE3FA;
+  --color-primary: #7C5DFA;
+  --color-primary-light: #9277FF;
+  --color-button-text-light: #FFFFFF;
+
+  --color-button-discard-bg: #F9FAFE;
+  --color-button-discard-text: #7E88C3;
+  --color-button-discard-hover-bg: #DFE3FA;
+  --color-button-discard-bg-dark: #252945;
+  --color-button-discard-text-dark: #DFE3FA;
+  --color-button-discard-hover-bg-dark: #FFFFFF;
+
+  --color-button-draft-bg: #373B53;
+  --color-button-draft-text: #888EB0; /* As per invoice-tediko */
+  --color-button-draft-hover-bg: #0C0E16;
+  --color-button-draft-text-dark: #DFE3FA;
+  --color-button-draft-hover-bg-dark: #1E2139;
+
+  --color-button-neutral-bg: #F9FAFE;
+  --color-button-neutral-text: #7E88C3;
+  --color-button-neutral-hover-bg: #DFE3FA;
+  --color-button-neutral-bg-dark: #252945;
+  --color-button-neutral-text-dark: #DFE3FA;
+  --color-button-neutral-hover-bg-dark: #FFFFFF;
+
+  --color-button-danger-bg: #EC5757;
+  --color-button-danger-hover-bg: #FF9797;
+  --color-error-bg: #ffebee;
+  --color-error-text: #c62828;
+  --color-error-border: #ef9a9a;
+
+  --text-primary: #0c0e16;
+  --text-secondary: #888eb0;
+  --border-color: #dfe3fa;
+  --sidebar-bg: #373b53;
+  --sidebar-logo-bg: #7c5dfa;
+  --sidebar-icon-color: #858bb2;
+  --sidebar-icon-hover-color: #dfe3fa;
+  --sidebar-separator-color: #494e6e;
+  
+}
+
+.theme-dark {
+  --background-main: #141625;
+  --background-content: #1e2139;
+  --text-primary: #ffffff;
+  --text-secondary: #dfe3fa;
+  --border-color: #252945;
+
+  --color-dropdown-bg-dark: #252945;
+  --color-checkbox-bg-dark: #1E2139;
+  --color-text-primary-dark: #FFFFFF;
+  --color-button-discard-bg-dark: #252945;
+  --color-button-draft-bg-dark: #373B53;
+  --color-button-draft-text-dark: #DFE3FA;
+  --color-error-bg-dark: #5c1212; /* Example dark error background */
+  --color-error-text-dark: #ffcdd2; /* Example dark error text */
+  --color-error-border-dark: #8c1c1c; /* Example dark error border */
+
+
+  /* Sidebar colors might remain the same or adjust slightly if needed */
+}
+
+/* Ensure body has no margin/padding that could interfere and set a base font */
+body {
+  margin: 0;
+  font-family: 'League Spartan', Arial, sans-serif; /* Example font from invoice-tediko */
+  /* You would typically import 'League Spartan' in your index.html or index.css */
+  background-color: var(--background-main);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.app-container {
+  display: flex;
+}
+
+.main-content {
+  flex-grow: 1;
+  margin-left: 103px; /* Width of the GlobalSideNav */
+  min-height: 100vh; /* Ensure main content area can fill the screen height */
+  position: relative; /* Useful for positioning elements within, like modals or animated transitions */
+  overflow-x: hidden; /* Prevents horizontal scroll if pages slide */
+  background-color: var(--background-main); /* Apply theme background */
+}
+
+/* Add to AppLayout.css or a relevant global/button stylesheet */
+.button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px !important; /* Adjust padding for icon buttons if needed */
+  line-height: 1; /* Ensure icon is centered */
+}
+
+.button-icon svg {
+  width: 2em; /* Makes SVG size relative to font-size */
+  height: 2em;
+  /* currentColor will make the SVG stroke match the button's text color */
+}

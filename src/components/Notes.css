@@ -1,0 +1,38 @@
+/* Notes.css */
+
+/* Styles for the display mode (when isEditable is false) */
+.notes-section:not(.form-section) { /* Target only view mode */
+  margin-top: 30px; /* Space above the notes section */
+  padding: 24px; /* Padding consistent with other view sections */
+  background-color: var(--color-invoice-item-bg, #F9FAFE); /* Light background like item list footer */
+  border-radius: 0 0 8px 8px; /* Rounded bottom corners */
+}
+
+.theme-dark .notes-section:not(.form-section) {
+  background-color: var(--color-invoice-item-bg-dark, #252945); /* Dark theme background */
+}
+
+/* Styles for the "Notes:" heading in display mode */
+.notes-section:not(.form-section) h2 {
+  font-size: 12px; /* 0.75rem */
+  color: var(--color-text-secondary, #7E88C3);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.theme-dark .notes-section:not(.form-section) h2 {
+  color: var(--color-text-secondary-dark, #DFE3FA);
+}
+
+/* Styles for the notes content (<pre>) in display mode */
+.notes-section:not(.form-section) pre {
+  font-size: 12px; /* 0.75rem */
+  color: var(--color-text-primary, #0C0E16); /* Notes text is often primary color */
+  line-height: 1.8;
+  white-space: pre-wrap; /* Ensures long lines wrap */
+  font-family: inherit; /* Inherit the main font */
+}
+
+.theme-dark .notes-section:not(.form-section) pre {
+  color: var(--color-text-primary-dark, #FFFFFF);
+}

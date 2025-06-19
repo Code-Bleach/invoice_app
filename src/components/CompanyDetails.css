@@ -1,0 +1,31 @@
+/* CompanyDetails.css */
+
+/* Styles for Form Mode Titles (Bill From, Bill To) */
+.company-details-form .form-section-title {
+  font-size: 12px; /* 0.75rem */
+  font-weight: bold;
+  color: var(--color-primary, #7C5DFA); /* Accent color like invoice-tediko */
+  margin-bottom: 24px; /* Space below the title */
+  margin-top: 24px; /* Space above the title if it's not the first section */
+}
+.company-details-form .form-section-title:first-of-type {
+  margin-top: 0; /* No top margin for the very first title ("Bill From") */
+}
+
+/* Styles for the sender address display mode (when isNew is false) */
+.sender-details-view {
+  text-align: right; /* Aligns text to the right as in invoice-tediko */
+  font-style: normal; /* Resets browser default for <address> */
+  font-size: 11px; /* 0.6875rem - small text for sender address */
+  line-height: 1.6; /* Or 18px */
+  color: var(--color-text-secondary, #7E88C3);
+}
+
+.sender-details-view div {
+  margin-bottom: 0px; /* invoice-tediko has tight spacing here */
+}
+
+/* Dark theme adjustments */
+.theme-dark .sender-details-view {
+  color: var(--color-text-secondary-dark, #DFE3FA);
+}

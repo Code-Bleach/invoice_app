@@ -1,0 +1,365 @@
+/* InvoiceDetailPage.css */
+
+/* --- Form Panel (New/Edit Invoice) --- */
+.invoice-detail-page.new-invoice-form {
+  position: fixed;
+  top: 0;
+  left: 103px; /* Start AFTER GlobalSideNav (assuming it's 103px wide) */
+  width: calc(100% - 103px); /* Take up remaining screen width */
+  max-width: 719px; /* Max width for the form panel content area */
+  height: 100vh;
+  background-color: var(--color-form-bg, white);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  z-index: 99; /* Ensure it's above general page content but can be under modals if needed */
+  transform: translateX(-100%); /* Initial position for slide-in animation */
+  animation: slideInFromLeft 0.4s forwards ease-out;
+  border-radius: 0 20px 20px 0; /* Rounded corners on the right */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column; /* Stack header, content, and footer vertically */
+  overflow: hidden; /* Prevent main panel from showing scrollbars; scrolling is in form-content-wrapper */
+}
+
+.theme-dark .invoice-detail-page.new-invoice-form {
+  background-color: var(--color-form-bg-dark, #141625);
+}
+
+.invoice-detail-page.new-invoice-form.editing-existing-invoice {
+  animation: none; /* Don't re-animate if already open for editing */
+  transform: translateX(0); /* Ensure it's in the correct final position */
+}
+
+.invoice-detail-page.new-invoice-form.form-panel-closing {
+  animation: slideOutToLeft 0.4s forwards ease-in;
+}
+
+/* Form Header (within the form panel) */
+.new-invoice-form .invoice-header {
+  padding-top: 56px; /* Space above the header text */
+  padding-left: 56px; /* Internal padding for header content */
+  padding-right: 56px; /* Internal padding for header content */
+  margin-bottom: 48px; /* Space below the entire header block */
+  flex-shrink: 0; /* Header should not shrink */
+  /* Font styling for h1 inside is in Header.css */
+}
+
+.theme-dark .new-invoice-form .invoice-header h1 {
+  color: var(--color-text-primary-dark, #FFFFFF);
+}
+
+/* Form Content Wrapper - This is the scrollable area */
+.new-invoice-form > .form-content-wrapper { /* Ensure it's a direct child */
+  flex-grow: 1; /* Allow this section to take up available vertical space */
+  overflow-y: auto; /* Enable vertical scrolling for this section only */
+  padding-left: 56px; /* Internal padding for form fields */
+  padding-right: 56px; /* Internal padding for form fields */
+  padding-bottom: 24px; /* Space at the end of scrollable content, before actions footer */
+}
+
+/* Action buttons container at the bottom of the form */
+.new-invoice-form > .actions-section.form-actions {
+  flex-shrink: 0; /* Prevent footer from shrinking */
+  width: 100%; /* Takes full width of its parent (.new-invoice-form) */
+  padding: 24px 56px; /* Internal padding for the actions bar, matching content wrapper */
+  background-color: var(--color-form-bg, white);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  border-radius: 0 0 20px 0; /* Match panel's bottom right rounding */
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.05); /* Optional: subtle shadow to separate from scrolling content */
+}
+
+.theme-dark .new-invoice-form > .actions-section.form-actions {
+  background-color: var(--color-form-bg-dark, #141625);
+}
+
+/* Button Styles (ensure these classes match Actions.jsx) */
+.actions-section button {
+  border: none;
+  padding: 16px 24px;
+  border-radius: 24px;
+  font-weight: bold;
+  font-size: 12px; /* 0.75rem */
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.button-discard, .button-cancel {
+  background-color: var(--color-button-discard-bg, #F9FAFE);
+  color: var(--color-button-discard-text, #7E88C3);
+}
+.theme-dark .button-discard, .theme-dark .button-cancel {
+  background-color: var(--color-button-discard-bg-dark, #252945);
+  color: var(--color-button-discard-text-dark, #DFE3FA);
+}
+.button-discard:hover, .button-cancel:hover {
+  background-color: var(--color-button-discard-hover-bg, #DFE3FA);
+}
+.theme-dark .button-discard:hover, .theme-dark .button-cancel:hover {
+  background-color: var(--color-button-discard-hover-bg-dark, #FFFFFF);
+  color: var(--color-button-discard-text, #7E88C3);
+}
+
+.button-save-draft {
+  background-color: var(--color-button-draft-bg, #373B53);
+  color: var(--color-button-draft-text, #888EB0);
+}
+.theme-dark .button-save-draft {
+  color: var(--color-button-draft-text-dark, #DFE3FA);
+}
+.button-save-draft:hover {
+  background-color: var(--color-button-draft-hover-bg, #0C0E16);
+}
+.theme-dark .button-save-draft:hover {
+  background-color: var(--color-button-draft-hover-bg-dark, #1E2139);
+}
+
+.button-save-send, .button-save-changes {
+  background-color: var(--color-primary, #7C5DFA);
+  color: var(--color-button-text-light, #FFFFFF);
+}
+.button-save-send:hover, .button-save-changes:hover {
+  background-color: var(--color-primary-light, #9277FF);
+}
+
+/* Fixed Form Error Message within the form panel */
+.new-invoice-form > .form-error-message { /* Target direct child */
+  margin-left: 56px;  /* Align with form content padding */
+  margin-right: 56px; /* Align with form content padding */
+  margin-bottom: 16px; /* Space below the error message before form fields */
+  z-index: 5; /* Above form content but below modals or other higher elements */
+}
+
+/* --- Invoice View Mode --- */
+.invoice-view-container {
+  max-width: 730px;
+  margin: 30px auto;
+  padding: 0 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.go-back-button {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 12px;
+  color: var(--color-text-primary, #0C0E16);
+  margin-bottom: 32px;
+  padding: 8px 0;
+  transition: color 0.2s ease-in-out;
+}
+.theme-dark .go-back-button {
+  color: var(--color-text-primary-dark, #FFFFFF);
+}
+.go-back-button svg path {
+  stroke: var(--color-primary, #7C5DFA);
+}
+.go-back-button:hover span {
+  color: var(--color-text-secondary, #7E88C3);
+}
+.theme-dark .go-back-button:hover span {
+  color: var(--color-text-secondary-dark, #DFE3FA);
+}
+
+.invoice-view-header,
+.invoice-view-body {
+  background-color: var(--color-invoice-bg, #FFFFFF);
+  border-radius: 8px;
+  box-shadow: 0px 10px 10px -10px rgba(72, 84, 159, 0.10);
+  padding: 24px;
+}
+.theme-dark .invoice-view-header,
+.theme-dark .invoice-view-body {
+  background-color: var(--color-invoice-bg-dark, #1E2139);
+}
+
+.invoice-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.status-info span:first-child {
+  font-size: 13px;
+  color: var(--color-text-secondary, #858BB2);
+}
+.theme-dark .status-info span:first-child {
+  color: var(--color-text-secondary-dark, #DFE3FA);
+}
+
+.invoice-view-actions .actions-section {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.invoice-view-actions .button-edit,
+.invoice-view-actions .button-delete,
+.invoice-view-actions .button-mark-paid {
+  background-color: var(--color-button-neutral-bg, #F9FAFE);
+  color: var(--color-button-neutral-text, #7E88C3);
+  padding: 12px 20px;
+}
+.theme-dark .invoice-view-actions .button-edit,
+.theme-dark .invoice-view-actions .button-delete,
+.theme-dark .invoice-view-actions .button-mark-paid {
+  background-color: var(--color-button-neutral-bg-dark, #252945);
+  color: var(--color-button-neutral-text-dark, #DFE3FA);
+}
+.invoice-view-actions .button-edit:hover {
+  background-color: var(--color-button-neutral-hover-bg, #DFE3FA);
+}
+.theme-dark .invoice-view-actions .button-edit:hover {
+  background-color: var(--color-button-neutral-hover-bg-dark, #FFFFFF);
+  color: var(--color-button-neutral-text, #7E88C3);
+}
+.invoice-view-actions .button-delete {
+  background-color: var(--color-button-danger-bg, #EC5757);
+  color: white;
+}
+.invoice-view-actions .button-delete:hover {
+  background-color: var(--color-button-danger-hover-bg, #FF9797);
+}
+.invoice-view-actions .button-mark-paid {
+  background-color: var(--color-primary, #7C5DFA);
+  color: white;
+}
+.invoice-view-actions .button-mark-paid:hover {
+  background-color: var(--color-primary-light, #9277FF);
+}
+.invoice-view-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.invoice-main-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.id-description {
+  margin-bottom: 20px;
+}
+.id-description h1 {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--color-text-primary, #0C0E16);
+  margin-bottom: 8px;
+}
+.id-description h1 span {
+  color: #7E88C3;
+}
+.id-description p {
+  font-size: 12px;
+  color: var(--color-text-secondary, #7E88C3);
+  line-height: 1.5;
+}
+.theme-dark .id-description h1 {
+  color: var(--color-text-primary-dark, #FFFFFF);
+}
+.theme-dark .id-description p {
+  color: var(--color-text-secondary-dark, #DFE3FA);
+}
+
+/* Logo in Invoice View Document */
+.invoice-view-logo-header {
+  margin-bottom: 20px;
+  /* background-color: #1E2139; */
+  padding: 10px 10px;
+  max-width:fit-content;
+}
+.invoice-document-logo {
+  max-width: 120px;
+  height: auto;
+  display: block;
+}
+
+/* Animations */
+@keyframes slideInFromLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+@keyframes slideOutToLeft {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) { /* Breakpoint when GlobalSideNav might change behavior */
+  .invoice-detail-page.new-invoice-form {
+    left: 0; /* Form takes full width on mobile */
+    width: 100%;
+    max-width: 100%; /* No max-width constraint from sidebar */
+    padding-left: 0; /* Main panel has no L/R padding, it's on children */
+    padding-right: 0;
+    padding-top: 0; /* Main panel has no T/B padding, it's on children */
+    padding-bottom: 0;
+    border-radius: 0 !important;
+  }
+  .new-invoice-form .invoice-header {
+    padding-top: 32px; /* Mobile top padding for header */
+    padding-left: 24px; /* Mobile L/R padding for header */
+    padding-right: 24px;
+    margin-bottom: 24px; /* Less space after header on mobile */
+  }
+  .new-invoice-form > .form-content-wrapper {
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 24px; /* Mobile bottom padding for scroll content */
+  }
+  .new-invoice-form > .actions-section.form-actions {
+    padding-left: 24px; /* Match mobile form padding */
+    padding-right: 24px;
+    border-radius: 0; /* No rounding if full width */
+  }
+
+  .invoice-view-header {
+    padding: 24px 16px;
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+  }
+  .status-info {
+    justify-content: space-between;
+  }
+  .invoice-view-actions .actions-section {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .new-invoice-form > .actions-section.form-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .new-invoice-form > .actions-section.form-actions button {
+    flex-basis: calc(50% - 4px);
+    text-align: center;
+  }
+  .new-invoice-form > .actions-section.form-actions .button-discard {
+    order: 1;
+    flex-basis: 100%;
+  }
+   .new-invoice-form > .actions-section.form-actions .button-save-draft {
+    order: 2;
+  }
+  .new-invoice-form > .actions-section.form-actions .button-save-send,
+  .new-invoice-form > .actions-section.form-actions .button-save-changes {
+    order: 3;
+    flex-grow: 1;
+  }
+}

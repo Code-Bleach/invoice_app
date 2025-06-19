@@ -1,0 +1,65 @@
+.invoice-info-view {
+  margin-top: 20px; /* Space from the ID/Description & Sender Address block */
+  margin-bottom: 30px; /* Space before items table */
+}
+
+.invoice-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Responsive columns, aiming for 3 */
+  gap: 20px 30px; /* Row and column gap */
+  align-items: start; /* Align items to the start of their grid area */
+}
+
+/* Styling for each group (Invoice Date, Payment Due, Bill To, Sent To) */
+.dates-column { /* Wrapper for the first column items */
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Space between Invoice Date and Payment Due */
+}
+
+.invoice-date-group,
+.payment-due-group,
+.bill-to-group,
+.client-email-group {
+}
+
+.meta-label {
+  font-size: 12px; /* 0.75rem */
+  color: var(--color-text-secondary, #7E88C3);
+  margin-bottom: 8px; /* Space between label and value */
+  font-weight: 500;
+}
+
+.meta-value {
+  font-size: 15px; /* 0.9375rem */
+  font-weight: bold;
+  color: var(--color-text-primary, #0C0E16);
+  line-height: 1.33; /* 20px */
+}
+
+.client-name {
+  /* Already covered by .meta-value, can be more specific if needed */
+}
+
+.client-address {
+  font-style: normal;
+  font-size: 11px; /* 0.6875rem */
+  color: var(--color-text-secondary, #7E88C3);
+  line-height: 1.63; /* 18px */
+  font-weight: normal; /* Override .meta-value bold if it inherits */
+  margin-top: 4px; /* Space from client name */
+}
+
+/* Dark theme adjustments for invoice-info-view if needed */
+.theme-dark .invoice-info-view {
+  /* No specific background for this component itself, it sits in invoice-view-body */
+}
+
+.theme-dark .meta-label,
+.theme-dark .client-address {
+  color: #adb5bd;
+}
+
+.theme-dark .meta-value {
+  color: #e9ecef;
+}

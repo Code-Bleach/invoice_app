@@ -1,0 +1,84 @@
+/* FormStyles.css */
+
+.form-section {
+  margin-bottom: 24px; /* Increased spacing between sections */
+  padding: 20px;
+  background-color: var(--color-form-bg, #fff); /* Use theme variable if available */
+  border-radius: 8px;
+  /* box-shadow: 0 2px 4px rgba(0,0,0,0.05); */ /* Optional: subtle shadow */
+}
+
+.form-section h2 {
+  font-size: 18px; /* Or 1.125rem */
+  color: var(--color-text-primary); /* Use theme variable */
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.form-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px; /* Or 0.75rem */
+  color: var(--color-text-secondary); /* Use theme variable */
+  font-weight: 500;
+}
+
+.form-section input[type="text"],
+.form-section input[type="email"],
+.form-section input[type="tel"],
+.form-section input[type="date"],
+.form-section input[type="number"],
+.form-section select,
+.form-section textarea {
+  width: 100%;
+  padding: 12px 15px; /* Increased padding */
+  border: 1px solid var(--color-form-input-border, #DFE3FA);
+  border-radius: 4px;
+  font-size: 13px; /* Or 0.8125rem, adjust as needed */
+  font-weight: bold;
+  color: var(--color-text-input, #0C0E16);
+  background-color: var(--color-form-input-bg, #fff);
+  box-sizing: border-box; /* Important for width: 100% and padding */
+  transition: border-color 0.2s ease-in-out;
+}
+
+.form-section input[type="text"]:focus,
+.form-section input[type="email"]:focus,
+.form-section input[type="tel"]:focus,
+.form-section input[type="date"]:focus,
+.form-section input[type="number"]:focus,
+.form-section select:focus,
+.form-section textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #7C5DFA); /* Highlight color */
+  /* box-shadow: 0 0 0 1px var(--color-primary, #7C5DFA); */ /* Optional focus ring */
+}
+
+.form-section textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Utility for creating grid layouts within form sections */
+.form-grid {
+  display: grid;
+  gap: 16px; /* Spacing between grid items */
+}
+
+/* Example: 2-column grid */
+.form-grid-col-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Example: 3-column grid (e.g., for City, Post Code, Country) */
+.form-grid-col-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 600px) {
+  .form-grid-col-2,
+  .form-grid-col-3 {
+    grid-template-columns: 1fr; /* Stack columns on small screens */
+  }
+}

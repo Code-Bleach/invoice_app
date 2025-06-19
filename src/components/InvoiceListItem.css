@@ -1,0 +1,94 @@
+.invoice-list-item-link {
+  text-decoration: none;
+  color: inherit;
+  display: block; /* Makes the whole area clickable */
+  margin-bottom: 16px; /* Space between items */
+}
+
+.invoice-list-item {
+  background-color: var(--background-content);
+  border-radius: 8px;
+  padding: 16px 24px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr auto) auto; /* Adjust based on content and desired layout */
+  gap: 10px 20px; /* Row gap, Column gap */
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-color); /* Use themed border or transparent */
+  transition: border-color 0.2s ease-in-out;
+}
+
+.invoice-list-item:hover {
+  border-color: var(--sidebar-logo-bg); /* Purple border on hover */
+}
+
+.invoice-list-item .invoice-id {
+  font-weight: bold;
+  color: var(--text-primary);
+  grid-column: 1 / 2;
+}
+
+.invoice-list-item .due-date {
+  color: #7e88c3;
+  font-size: 0.9em;
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+  color: var(--text-secondary);
+}
+
+.invoice-list-item .client-name {
+  color: var(--text-secondary);
+  text-align: left; /* Or right if preferred */
+  grid-column: 2 / 3;
+  grid-row: 1 / 3; /* Span both rows if due date is below ID */
+  justify-self: start; /* Align to the start of its grid area */
+}
+
+.invoice-list-item .total-amount {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: var(--text-primary);
+  text-align: right;
+  grid-column: 3 / 4;
+  grid-row: 1 / 3;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.9em;
+  width: fit-content; /* Or fixed width */
+  justify-self: end; /* Align to the end of its grid area */
+  grid-column: 4 / 5;
+  grid-row: 1 / 3;
+}
+
+.status-badge .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+/* Status colors - match these with invoice-tediko */
+.status-badge.status-paid { background-color: rgba(51, 214, 159, 0.06); color: #33d69f; }
+.status-badge.status-paid .status-dot { background-color: #33d69f; }
+
+.status-badge.status-pending { background-color: rgba(255, 143, 0, 0.06); color: #ff8f00; }
+.status-badge.status-pending .status-dot { background-color: #ff8f00; }
+
+/* Adjust draft status colors for better contrast in dark mode if needed */
+.status-badge.status-draft { background-color: var(--border-color); color: var(--text-secondary); }
+.status-badge.status-draft .status-dot { background-color: var(--text-secondary); }
+
+.invoice-list-item .arrow-icon {
+  color: #7c5dfa; /* Purple */
+  font-weight: bold;
+  font-size: 1.2em;
+  justify-self: center;
+  grid-column: 5 / 6;
+  grid-row: 1 / 3;
+}

@@ -1,0 +1,188 @@
+/* In FormStyles.css or a new ItemsTable.css */
+.items-table.form-section h2 {
+  color: #777f98;
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+}
+
+.items-table.form-section table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.items-table.form-section th {
+  text-align: left;
+  color: #7e88c3;
+  font-size: 0.8rem;
+  padding-bottom: 10px;
+}
+
+.items-table.form-section td {
+  padding-right: 10px; /* Spacing between columns */
+  vertical-align: middle;
+}
+
+.items-table.form-section td input[type="text"],
+.items-table.form-section td input[type="number"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dfe3fa;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-bottom: 0; /* Override general input margin if needed */
+}
+
+.items-table.form-section td:last-child { /* Total column */
+  color: #7e88c3;
+  font-weight: bold;
+}
+
+.delete-item-btn {
+  background: none;
+  border: none;
+  color: #888eb0;
+  cursor: pointer;
+  font-size: 1.2rem; /* Adjust icon size */
+  padding: 5px;
+}
+.delete-item-btn:hover {
+  color: #ec5757; /* Red on hover */
+}
+
+.add-item-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #f9fafe; /* Light greyish blue */
+  color: #7e88c3; /* Darker text */
+  border: none;
+  border-radius: 24px; /* Pill shape */
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
+}
+.add-item-btn:hover {
+ background-color: #7C5DFA; /* Primary color */
+  color: white;
+}
+
+/* Styles for View Mode Table */
+.items-table-view {
+  margin-top: 40px; /* Space above the items table section */
+}
+
+.items-table-view .table-container {
+  background-color: var(--color-invoice-item-bg, #F9FAFE); /* Light background for items area */
+  padding: 24px; /* Padding around the table */
+  border-radius: 8px 8px 0 0; /* Rounded top corners */
+}
+
+.theme-dark .items-table-view .table-container {
+  background-color: var(--color-invoice-item-bg-dark, #252945);
+}
+
+.invoice-items-data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.invoice-items-data-table th {
+  font-size: 11px; /* 0.6875rem */
+  color: var(--color-text-secondary, #7E88C3);
+  padding-bottom: 16px; /* Space below header text */
+  text-align: left;
+  font-weight: 500;
+}
+
+.theme-dark .invoice-items-data-table th {
+  color: var(--color-text-secondary-dark, #DFE3FA);
+}
+
+.invoice-items-data-table th.th-qty,
+.invoice-items-data-table th.th-price,
+.invoice-items-data-table th.th-total {
+  text-align: right;
+}
+
+.invoice-items-data-table td {
+  font-size: 12px; /* 0.75rem */
+  font-weight: bold;
+  color: var(--color-text-primary, #0C0E16);
+  padding: 16px 0; /* Space above/below item rows */
+  border-bottom: 1px solid transparent; /* For spacing, or use actual border if needed */
+}
+
+.theme-dark .invoice-items-data-table td {
+  color: var(--color-text-primary-dark, #FFFFFF);
+}
+
+.invoice-items-data-table td.td-qty,
+.invoice-items-data-table td.td-price,
+.invoice-items-data-table td.td-total {
+  text-align: right;
+  color: var(--color-text-secondary, #7E88C3); /* Qty, Price, Total values are often secondary color */
+}
+.theme-dark .invoice-items-data-table td.td-qty,
+.theme-dark .invoice-items-data-table td.td-price,
+.theme-dark .invoice-items-data-table td.td-total {
+  color: var(--color-text-secondary-dark, #DFE3FA);
+}
+
+/* Grand Total Footer Row (inside tfoot) */
+.invoice-items-data-table tfoot {
+  background-color: var(--color-total-bg, #373B53); /* Dark background for total */
+  color: white; /* Default text color for footer */
+  border-radius: 0 0 8px 8px; /* Rounded bottom corners */
+}
+.theme-dark .invoice-items-data-table tfoot {
+  background-color: var(--color-total-bg-dark, #0C0E16);
+}
+.invoice-items-data-table tfoot td { /* Apply padding to all footer cells */
+  padding: 24px; 
+  /* Reset default td styles that might conflict */
+  border-bottom: none; 
+  color: inherit; /* Inherit color from tfoot */
+  /* Ensure consistent padding for all footer rows */
+  padding-top: 12px; /* Adjust padding for sub-lines */
+  padding-bottom: 12px; /* Adjust padding for sub-lines */
+}
+
+/* Styling for Subtotal and Tax lines in the footer */
+.invoice-items-data-table tfoot td.summary-label {
+  text-align: left;
+  font-size: 11px; /* Smaller font for sub-lines */
+  font-weight: 500;
+}
+.invoice-items-data-table tfoot td.summary-value {
+  text-align: right;
+  font-size: 13px; /* Slightly smaller than grand total value */
+  font-weight: bold;
+}
+
+/* Specific styling for the cells */
+.invoice-items-data-table tfoot td.grand-total-label {
+  text-align: left;
+  font-size: 12px; /* 0.75rem */
+  font-weight: 500;
+}
+
+/* Ensure the grand total row itself has enough padding if sub-lines are present */
+.invoice-items-data-table tfoot tr.grand-total-row td {
+  padding-top: 16px; /* More top padding for grand total line */
+  padding-bottom: 24px; /* Keep bottom padding */
+}
+.invoice-items-data-table tfoot td.grand-total-label {
+  text-align: left;
+  font-weight: 500;
+}
+.invoice-items-data-table tfoot td.grand-total-value {
+  text-align: right;
+  font-size: 20px; /* 1.25rem for the actual total amount */
+  font-weight: bold;
+}
+
+.invoice-items-data-table tfoot td.grand-total-value {
+  text-align: right;
+  font-size: 20px; /* 1.25rem */
+  font-weight: bold;
+}
