@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './GlobalSideNav.css';
-import appLogo from '../assets/barmilogo.png'; // Import the logo
+import appLogo from '../assets/barmilogo-light.png'; // Import the logo
 
 // Placeholder icons
 const ThemeIconPlaceholder = ({ theme }) => <span className="icon-placeholder">{theme === 'light' ? '🌙' : '☀️'}</span>; // Moon for light, Sun for dark

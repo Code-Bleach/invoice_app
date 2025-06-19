@@ -193,10 +193,23 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
 
   const handleSaveAndSend = () => { // For new invoices
     if (!validateForm()) return;
-    setInvoiceForSendOptions({ ...formData }); // No ID or status change yet
+   // For new invoices, just open the modal. The form remains.
+    // The decision to save as draft/pending and navigate happens based on modal action.
+    setInvoiceForSendOptions({ ...formData }); // Pass current form data to the modal
     setIsSendOptionsModalOpen(true);
+    
+    // if (isNew) { // Only close the form part if it's a new invoice
+    //   setIsFormClosing(true);
+    //   setTimeout(() => {
+    //     setIsEditMode(false); // This will make isFormActive false, hiding the form
+    //     setIsFormClosing(false);
+    //     // DO NOT call setFormData(initialFormData) here
+    //     // DO NOT call navigate('/') here
+    //     // These will be handled by the modal's outcome (email, share, or close)
+    //   }, ANIMATION_DURATION);
+    // }
   };
-
+  
   const handleSendDraft = () => { // For existing drafts
     if (formData.id && formData.status === 'draft') {
       setInvoiceForSendOptions({ ...formData });
@@ -265,7 +278,7 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
         const pdfBlob = pdf.output('blob');
         return new File([pdfBlob], `invoice-${invoice.id?.substring(0,8) || 'new'}.pdf`, { type: 'application/pdf' });
       } else {
-        pdf.save(`invoice-${invoice.id?.substring(0,8) || 'new'}.pdf`);
+        pdf.save(`invoice-${invoice.id?.substring(0,8) || 'new'}.pdf`); // This is standard
         return true;
       }
     } catch (error) {
@@ -274,13 +287,17 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
     }
   };
 
-  const finalizeAndSaveAsPending = (invoiceDataFromModal) => {
-    const finalInvoice = {
-      ...invoiceDataFromModal,
+  // This function now handles saving/updating the invoice to 'pending' status
+  // It's called by handleEmailInvoice and handleShareInvoice
+  const finalizeAndSaveAsPending = (invoiceDataToSave) => {
+     const finalInvoice = {
+      ...invoiceDataToSave,
       status: 'pending',
-      id: invoiceDataFromModal.id || `INV-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`
+      // Only generate a new ID if one doesn't exist (for new invoices from the modal)
+      id: invoiceDataToSave.id || `INV-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`
     };
-    if (isNew || !invoiceDataFromModal.id) { // If it was a new form or a draft without a persistent ID
+    // Check if this is a new invoice being saved for the first time as pending
+    if (!invoiceDataToSave.id) { // This implies it came from the new invoice form via modal
       const newlyAddedInvoice = addInvoice(finalInvoice);
       setFormData(newlyAddedInvoice); // Update local state with the full new invoice
       return newlyAddedInvoice;
@@ -292,7 +309,11 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
   };
 
   const handleEmailInvoice = async (invoiceDataFromModal) => {
-    const finalPendingInvoice = finalizeAndSaveAsPending(invoiceDataFromModal);
+    // If invoiceDataFromModal has no ID, it's from a new invoice form.
+    // Otherwise, it's an existing draft being sent.
+    const wasNewInvoiceFlow = !invoiceDataFromModal.id;
+    const finalPendingInvoice = finalizeAndSaveAsPending(invoiceDataFromModal); // Saves as pending, gets ID if new
+
     const input = invoiceViewRef.current; // This will be null if called from new invoice form
     let pdfGenerated = false;
 
@@ -309,8 +330,9 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
     const mailtoLink = `mailto:${finalPendingInvoice.clientEmail}?subject=Invoice #${finalPendingInvoice.id.substring(0,8)} from BarMiConstruction&body=Dear ${finalPendingInvoice.clientName},%0D%0A%0D%0APlease find your invoice attached (invoice-${finalPendingInvoice.id.substring(0,8)}.pdf).%0D%0A%0D%0AInvoice ID: ${finalPendingInvoice.id.substring(0,8)}%0D%0ADue Date: ${finalPendingInvoice.paymentDueDate || calculateDueDate(finalPendingInvoice.invoiceDate, finalPendingInvoice.paymentTerms)}%0D%0ATotal Amount: £${(finalPendingInvoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(finalPendingInvoice.serviceCharge) || 0) + ((finalPendingInvoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(finalPendingInvoice.serviceCharge) || 0)) * (Number(finalPendingInvoice.taxRate) || 0))).toFixed(2)}%0D%0A%0D%0AThank you,%0D%0ABarMiConstruction`;
     window.open(mailtoLink, '_blank');
 
-    if (isNew) {
-      closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`); // Navigate to view the new pending invoice
+    if (wasNewInvoiceFlow) {
+      // Form closes, navigates to view the new pending invoice.
+      closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`);
     } else {
       setIsSendOptionsModalOpen(false); // Just close modal
     }
@@ -345,7 +367,10 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
   };
 
   const handleShareInvoice = async (invoiceDataFromModal) => {
-    const finalPendingInvoice = finalizeAndSaveAsPending(invoiceDataFromModal);
+    // If invoiceDataFromModal has no ID, it's from a new invoice form.
+    const wasNewInvoiceFlow = !invoiceDataFromModal.id;
+    const finalPendingInvoice = finalizeAndSaveAsPending(invoiceDataFromModal); // Saves as pending, gets ID if new
+
     const input = invoiceViewRef.current; // Will be null if called from new invoice form
     let pdfFile = null;
 
@@ -360,10 +385,10 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
       };
       if (pdfFile && navigator.canShare({ files: [pdfFile] })) {
         shareData.files = [pdfFile];
-      } else if (!pdfFile && isNew) {
+      } else if (!pdfFile && wasNewInvoiceFlow) { // Check if it was the new invoice flow
          alert("Invoice will be shared as text. PDF can be shared after viewing the saved invoice.");
-      } else if (!pdfFile && !isNew) {
-         alert("PDF generation failed. Sharing text only.");
+      } else if (!pdfFile && !wasNewInvoiceFlow) { // Existing invoice, PDF gen failed
+         alert("PDF generation failed or content not ready. Sharing text only.");
       }
 
       try {
@@ -375,20 +400,24 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
       alert('Web Share API (with file sharing) not supported in your browser.');
     }
 
-    if (isNew) {
-      closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`);
+    if (wasNewInvoiceFlow) {
+      // Form closes, navigates to view the new pending invoice.
+      closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`); 
     } else {
       setIsSendOptionsModalOpen(false);
     }
   };
 
   const handleModalCloseAction = () => {
-    if (isNew && invoiceForSendOptions) {
-      const draftInvoice = { ...invoiceForSendOptions, status: 'draft', id: `INV-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` };
+    // This is called when the modal's "Close" button is clicked.
+    // If invoiceForSendOptions has no ID, it means it was from the "Save & Send" of a new invoice.
+    // In this case, save as draft and navigate.
+    if (invoiceForSendOptions && !invoiceForSendOptions.id && isNew) {
+     const draftInvoice = { ...invoiceForSendOptions, status: 'draft', id: `INV-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` };
       const newDraft = addInvoice(draftInvoice);
       closeFormAndNavigate(`/invoice/${newDraft.id}`); // Navigate to view the new draft
     } else {
-      setIsSendOptionsModalOpen(false); // Just close if it was an existing invoice
+      setIsSendOptionsModalOpen(false); // Just close if it was an existing invoice or an action was already taken
     }
   };
 
