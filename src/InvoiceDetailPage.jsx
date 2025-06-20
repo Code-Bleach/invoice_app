@@ -37,7 +37,10 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
   const [invoiceForSendOptions, setInvoiceForSendOptions] = useState(null);
   const [isGuideMessageOpen, setIsGuideMessageOpen] = useState(false);
   const [guideMessageText, setGuideMessageText] = useState('');
+   const [dontShowEmailGuideAgain, setDontShowEmailGuideAgain] = useState(() => localStorage.getItem('dontShowEmailGuide') === 'true');
+  const [currentMailtoLink, setCurrentMailtoLink] = useState(''); // To store the mailto link
   const invoiceViewRef = useRef(null);
+
 
 
   const ANIMATION_DURATION = 400;
@@ -457,6 +460,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     if (invoiceForSendOptions && !invoiceForSendOptions.id && isNew) {
      const draftInvoice = { ...invoiceForSendOptions, status: 'draft', id: generateNewInvoiceId() };
      const newDraft = addInvoice(draftInvoice);
+      setIsSendOptionsModalOpen(false); // Close the modal
       closeFormAndNavigate(`/invoice/${newDraft.id}`); // Navigate to view the new draft
     } else {
       setIsSendOptionsModalOpen(false); // Just close if it was an existing invoice or an action was already taken
@@ -480,18 +484,27 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
       alert("Invoice view not ready for PDF generation. Composing email without PDF.");
     }
 
+    // Define mailtoLink at the beginning of the function scope
+    const mailtoLink = `mailto:${invoiceToEmail.clientEmail}?subject=Invoice%20%23${invoiceToEmail.id.substring(0,8)}%20from%20BarMiConstruction&body=Dear%20${invoiceToEmail.clientName},%0D%0A%0D%0APlease%20find%20your%20invoice%20attached%20(invoice-${invoiceToEmail.id.substring(0,8)}.pdf).%0D%0A%0D%0AInvoice%20ID:%20${invoiceToEmail.id.substring(0,8)}%0D%0ADue%20Date:%20${invoiceToEmail.paymentDueDate || calculateDueDate(invoiceToEmail.invoiceDate, invoiceToEmail.paymentTerms)}%0D%0ATotal%20Amount:%20£${(invoiceToEmail.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToEmail.serviceCharge) || 0) + ((invoiceToEmail.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToEmail.serviceCharge) || 0)) * (Number(invoiceToEmail.taxRate) || 0))).toFixed(2)}%0D%0A%0D%0AThank%20you,%0D%0ABarMiConstruction`;
+
+    setCurrentMailtoLink(mailtoLink); // Store the link
+
     // Show guide message instead of alert
     if (pdfGenerated) {
-      setGuideMessageText("The invoice PDF has been downloaded to your default downloads folder. An email draft will now open; please attach the downloaded PDF to your email.");
-      setIsGuideMessageOpen(true);
+      if (dontShowEmailGuideAgain) {
+        console.log("[executeEmailAction] 'Don't show guide' is true. Opening mailto link directly.");
+        window.open(mailtoLink); // Removed _blank
+        console.log("[executeEmailAction] mailto link action dispatched directly.");
+      } else {
+        setGuideMessageText("The invoice PDF has been downloaded to your default downloads folder. An email draft will open after you click 'Got it'; please attach the downloaded PDF to your email.");
+        setIsGuideMessageOpen(true);
+      }
+    } else { // If PDF not generated, open mailto link directly
+      console.log("[executeEmailAction] PDF not generated. Opening mailto link directly.");
+      window.open(mailtoLink); // Removed _blank
+      console.log("[executeEmailAction] mailto link action dispatched directly (no PDF).");
     }
-    
-    console.log("[executeEmailAction] Constructing mailto link for", invoiceToEmail.clientEmail);
-    const mailtoLink = `mailto:${invoiceToEmail.clientEmail}?subject=Invoice #${invoiceToEmail.id.substring(0,8)} from BarMiConstruction&body=Dear ${invoiceToEmail.clientName},%0D%0A%0D%0APlease find your invoice attached (invoice-${invoiceToEmail.id.substring(0,8)}.pdf).%0D%0A%0D%0AInvoice ID: ${invoiceToEmail.id.substring(0,8)}%0D%0ADue Date: ${invoiceToEmail.paymentDueDate || calculateDueDate(invoiceToEmail.invoiceDate, invoiceToEmail.paymentTerms)}%0D%0ATotal Amount: £${(invoiceToEmail.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToEmail.serviceCharge) || 0) + ((invoiceToEmail.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToEmail.serviceCharge) || 0)) * (Number(invoiceToEmail.taxRate) || 0))).toFixed(2)}%0D%0A%0D%0AThank you,%0D%0ABarMiConstruction`;
-    console.log("[executeEmailAction] Attempting to open mailto link.");
-    window.open(mailtoLink, '_blank');
-    console.log("[executeEmailAction] mailto link action dispatched.");
-  };
+ };
 
   // Extracted logic for actually performing the share action
   const executeShareAction = async (invoiceToShare) => {
@@ -679,14 +692,31 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
       />
     {isGuideMessageOpen && (
         <div className="modal-overlay guide-message-overlay">
-          <div className="modal-content guide-message-modal">
-            <h3>Quick Guide</h3>
-            <p>{guideMessageText}</p>
-            <button onClick={() => setIsGuideMessageOpen(false)} className="button-primary">
+        <div className="modal-content guide-message-modal">
+          <h3>Quick Guide</h3>
+          <p>{guideMessageText}</p>
+          <div className="guide-options">
+            <label htmlFor="dontShowAgainCheckbox">
+              <input
+                type="checkbox"
+                id="dontShowAgainCheckbox"
+                checked={dontShowEmailGuideAgain}
+                onChange={(e) => setDontShowEmailGuideAgain(e.target.checked)}
+              />
+              Don't show this again
+            </label>
+          </div>
+          <button
+            onClick={() => {
+              setIsGuideMessageOpen(false);
+              if (dontShowEmailGuideAgain) localStorage.setItem('dontShowEmailGuide', 'true'); else localStorage.removeItem('dontShowEmailGuide');
+             if (currentMailtoLink) window.open(currentMailtoLink); console.log("[GuideMessage] mailto link action dispatched from guide."); // Removed _blank
+            }} className="button-primary">
               Got it
             </button>
           </div>
-        </div>
+          
+      </div>
       )}
     </>
   );
