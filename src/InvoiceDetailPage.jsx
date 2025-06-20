@@ -158,6 +158,11 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
       }
     }
   }, [formData.invoiceDate, formData.paymentTerms, formData.notes]);
+  
+    // Function to generate a new unique invoice ID
+  const generateNewInvoiceId = () => {
+    return `INV-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -224,7 +229,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
 
   const handleSaveDraft = () => {
     if (!validateForm()) return;
-    const draftInvoice = { ...formData, status: 'draft', id: formData.id || `INV-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` };
+     const draftInvoice = { ...formData, status: 'draft', id: formData.id || generateNewInvoiceId() };
     if (formData.id) {
       updateInvoice(draftInvoice);
       setOriginalInvoiceData(draftInvoice); // Update original data after saving changes to draft
@@ -338,7 +343,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
       ...invoiceDataToSave,
       status: 'pending',
       // Only generate a new ID if one doesn't exist (for new invoices from the modal)
-      id: invoiceDataToSave.id || `INV-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`
+      id: invoiceDataToSave.id || generateNewInvoiceId()
     };
     // Check if this is a new invoice being saved for the first time as pending
     if (!invoiceDataToSave.id) { // This implies it came from the new invoice form via modal
@@ -450,8 +455,8 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     // If invoiceForSendOptions has no ID, it means it was from the "Save & Send" of a new invoice.
     // In this case, save as draft and navigate.
     if (invoiceForSendOptions && !invoiceForSendOptions.id && isNew) {
-     const draftInvoice = { ...invoiceForSendOptions, status: 'draft', id: `INV-${Date.now()}-${Math.random().toString(36).substring(2, 5)}` };
-      const newDraft = addInvoice(draftInvoice);
+     const draftInvoice = { ...invoiceForSendOptions, status: 'draft', id: generateNewInvoiceId() };
+     const newDraft = addInvoice(draftInvoice);
       closeFormAndNavigate(`/invoice/${newDraft.id}`); // Navigate to view the new draft
     } else {
       setIsSendOptionsModalOpen(false); // Just close if it was an existing invoice or an action was already taken
