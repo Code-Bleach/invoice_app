@@ -363,3 +363,66 @@
     flex-grow: 1;
   }
 }
+
+/* ... guide message ... */
+
+.guide-message-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000; /* Ensure it's on top */
+  padding: 20px;
+}
+
+.guide-message-modal {
+  background-color: var(--color-bg-content); /* Use your theme's content background */
+  color: var(--color-text-primary); /* Use your theme's primary text color */
+  padding: 25px 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 450px; /* Adjust as needed */
+  text-align: center;
+}
+
+.guide-message-modal h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--color-text-headings); /* Or your primary heading color */
+  font-size: 1.5rem; /* Adjust as needed */
+}
+
+.guide-message-modal p {
+  margin-bottom: 20px;
+  line-height: 1.6;
+  font-size: 0.95rem; /* Adjust as needed */
+}
+
+.guide-message-modal button.button-primary {
+  /* Assuming you have a .button-primary style already */
+  /* If not, add some basic styling: */
+  /*
+  padding: 10px 20px;
+  border: none;
+  border-radius: 24px;
+  background-color: #7C5DFA; 
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  */
+  display: block;
+  margin: 0 auto; /* Center the button if it's the only one */
+}
+
+/*
+.guide-message-modal button.button-primary:hover {
+  background-color: #9277FF; 
+}
+*/

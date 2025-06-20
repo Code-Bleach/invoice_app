@@ -35,7 +35,10 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
   const [isFormClosing, setIsFormClosing] = useState(false);
   const [isSendOptionsModalOpen, setIsSendOptionsModalOpen] = useState(false);
   const [invoiceForSendOptions, setInvoiceForSendOptions] = useState(null);
+  const [isGuideMessageOpen, setIsGuideMessageOpen] = useState(false);
+  const [guideMessageText, setGuideMessageText] = useState('');
   const invoiceViewRef = useRef(null);
+
 
   const ANIMATION_DURATION = 400;
 
@@ -80,6 +83,8 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
   };
 
   useEffect(() => {
+    console.log('[InvoiceDetailPage useEffect] Running. invoiceId:', invoiceId, 'isNew:', isNew, 'location.state:', location.state);
+
     if (invoiceId && invoices) {
       const existingInvoice = invoices.find(inv => inv.id === invoiceId);
       if (existingInvoice) {
@@ -90,16 +95,52 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
         setOriginalInvoiceData(fullExistingData);
         setIsEditMode(false); // Start in view mode for existing invoices
 
+        console.log('[InvoiceDetailPage useEffect] Checking for showSendOptions. location.state:', location.state, 'existingInvoice.id:', existingInvoice.id, 'invoiceId:', invoiceId);
+        // Handle opening send options modal if requested by navigation state
         if (location.state?.showSendOptions && existingInvoice.id === invoiceId) {
+          console.log('[InvoiceDetailPage useEffect] showSendOptions condition met. Opening modal.');
           setInvoiceForSendOptions(fullExistingData);
           setIsSendOptionsModalOpen(true);
           navigate(location.pathname, { replace: true, state: {} });
         }
+
+          console.log('[InvoiceDetailPage useEffect] Checking for triggerAction. location.state:', location.state, 'existingInvoice.id:', existingInvoice.id, 'invoiceId:', invoiceId);
+        // Handle triggering email/share action if requested by navigation state
+        if (location.state?.triggerAction && existingInvoice.id === invoiceId) {
+         // if (location.state.triggerAction === 'email') {
+        //     executeEmailAction(fullExistingData);
+        //   } else if (location.state.triggerAction === 'share') {
+        //     executeShareAction(fullExistingData);
+        //   }
+        //   // Clear the triggerAction from state after processing
+        //   navigate(location.pathname, { replace: true, state: {} });
+            const actionToTrigger = location.state.triggerAction;
+             console.log('[InvoiceDetailPage useEffect] triggerAction condition met. Action:', actionToTrigger);
+             const dataForAction = { ...fullExistingData }; // Capture data to avoid issues with stale closures
+
+          // Clear the triggerAction from state immediately so it doesn't re-trigger
+          // navigate(location.pathname, { replace: true, state: {} }); 
+          // ^ We'll move this clearing to *after* the action is attempted or if it's not one of ours.
+
+          // Defer the execution slightly to ensure DOM is ready and to help with trusted event context
+          setTimeout(() => {
+             console.log(`[InvoiceDetailPage useEffect setTimeout] Attempting to trigger action: ${actionToTrigger} for invoice: ${dataForAction.id}`);
+            if (actionToTrigger === 'email') {
+              executeEmailAction(dataForAction);
+            } else if (actionToTrigger === 'share') {
+              executeShareAction(dataForAction);
+            }
+            // Clear the state after attempting the action
+            navigate(location.pathname, { replace: true, state: {} });
+          }, 100); // A small delay like 100ms. 0ms can also work.
+        }
+
       } else {
-        console.error("Invoice not found:", invoiceId);
+        console.error("[InvoiceDetailPage useEffect] Invoice not found with ID:", invoiceId);
         navigate('/');
       }
     } else if (isNew) {
+      console.log('[InvoiceDetailPage useEffect] Setting up for new invoice.');
       const initialDueDate = calculateDueDate(initialFormData.invoiceDate, initialFormData.paymentTerms);
       const initialNotes = generateNotesWithDueDate(initialDueDate);
       setFormData({ ...initialFormData, paymentDueDate: initialDueDate, notes: initialNotes, status: 'draft' });
@@ -168,15 +209,18 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
     return true;
   };
 
-  const closeFormAndNavigate = (path = '/') => {
-    setIsFormClosing(true);
-    setTimeout(() => {
-      setIsEditMode(false);
-      setIsFormClosing(false);
-      setFormData(initialFormData); // Reset form for next time
-      navigate(path);
-    }, ANIMATION_DURATION);
-  };
+  // Ensure closeFormAndNavigate is defined to accept and use navigationState
+const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure navigationState is a parameter
+  setIsFormClosing(true);
+  setTimeout(() => {
+    setIsEditMode(false);
+    setIsFormClosing(false);
+    setFormData(initialFormData); // Reset form for next time
+    navigate(path, navigationState); // Pass the state here
+  }, ANIMATION_DURATION);
+};
+ // Make sure this function is correctly passing navigationState if it's used elsewhere with state
+
 
   const handleSaveDraft = () => {
     if (!validateForm()) return;
@@ -314,26 +358,14 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
     const wasNewInvoiceFlow = !invoiceDataFromModal.id;
     const finalPendingInvoice = finalizeAndSaveAsPending(invoiceDataFromModal); // Saves as pending, gets ID if new
 
-    const input = invoiceViewRef.current; // This will be null if called from new invoice form
-    let pdfGenerated = false;
-
-    if (input) { // If view is rendered (i.e., modal opened from view mode)
-      pdfGenerated = await generatePDF(finalPendingInvoice, input);
-    } else { // If modal opened from new invoice form
-      alert("Compose your email. The invoice is now pending. PDF can be downloaded/attached after viewing it.");
-    }
-
-    if (pdfGenerated) {
-      alert("The invoice PDF has been downloaded. Please find the email draft that will open and attach the PDF.");
-    }
-    
-    const mailtoLink = `mailto:${finalPendingInvoice.clientEmail}?subject=Invoice #${finalPendingInvoice.id.substring(0,8)} from BarMiConstruction&body=Dear ${finalPendingInvoice.clientName},%0D%0A%0D%0APlease find your invoice attached (invoice-${finalPendingInvoice.id.substring(0,8)}.pdf).%0D%0A%0D%0AInvoice ID: ${finalPendingInvoice.id.substring(0,8)}%0D%0ADue Date: ${finalPendingInvoice.paymentDueDate || calculateDueDate(finalPendingInvoice.invoiceDate, finalPendingInvoice.paymentTerms)}%0D%0ATotal Amount: £${(finalPendingInvoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(finalPendingInvoice.serviceCharge) || 0) + ((finalPendingInvoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(finalPendingInvoice.serviceCharge) || 0)) * (Number(finalPendingInvoice.taxRate) || 0))).toFixed(2)}%0D%0A%0D%0AThank you,%0D%0ABarMiConstruction`;
-    window.open(mailtoLink, '_blank');
-
     if (wasNewInvoiceFlow) {
       // Form closes, navigates to view the new pending invoice.
-      closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`);
+      // closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`);
+    // Pass a state to trigger the email action after navigation.
+      setIsSendOptionsModalOpen(false); // Close modal before navigating
+      closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`, { state: { triggerAction: 'email' } });
     } else {
+      await executeEmailAction(finalPendingInvoice); // For existing invoices, execute directly
       setIsSendOptionsModalOpen(false); // Just close modal
     }
   };
@@ -371,39 +403,44 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
     const wasNewInvoiceFlow = !invoiceDataFromModal.id;
     const finalPendingInvoice = finalizeAndSaveAsPending(invoiceDataFromModal); // Saves as pending, gets ID if new
 
-    const input = invoiceViewRef.current; // Will be null if called from new invoice form
-    let pdfFile = null;
+    // const input = invoiceViewRef.current; // Will be null if called from new invoice form
+    // let pdfFile = null;
 
-    if (input) { // If view is rendered
-      pdfFile = await generatePDF(finalPendingInvoice, input, true);
-    }
+    // if (input) { // If view is rendered
+    //   pdfFile = await generatePDF(finalPendingInvoice, input, true);
+    // }
 
-    if (navigator.share && navigator.canShare) {
-      const shareData = {
-        title: `Invoice #${finalPendingInvoice.id.substring(0,8)} from BarMiConstruction`,
-        text: `Invoice from BarMiConstruction for ${finalPendingInvoice.clientName}. Due: ${finalPendingInvoice.paymentDueDate || calculateDueDate(finalPendingInvoice.invoiceDate, finalPendingInvoice.paymentTerms)}, Amount: £${(finalPendingInvoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(finalPendingInvoice.serviceCharge) || 0) + ((finalPendingInvoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(finalPendingInvoice.serviceCharge) || 0)) * (Number(finalPendingInvoice.taxRate) || 0))).toFixed(2)}.`,
-      };
-      if (pdfFile && navigator.canShare({ files: [pdfFile] })) {
-        shareData.files = [pdfFile];
-      } else if (!pdfFile && wasNewInvoiceFlow) { // Check if it was the new invoice flow
-         alert("Invoice will be shared as text. PDF can be shared after viewing the saved invoice.");
-      } else if (!pdfFile && !wasNewInvoiceFlow) { // Existing invoice, PDF gen failed
-         alert("PDF generation failed or content not ready. Sharing text only.");
-      }
+    // if (navigator.share && navigator.canShare) {
+    //   const shareData = {
+    //     title: `Invoice #${finalPendingInvoice.id.substring(0,8)} from BarMiConstruction`,
+    //     text: `Invoice from BarMiConstruction for ${finalPendingInvoice.clientName}. Due: ${finalPendingInvoice.paymentDueDate || calculateDueDate(finalPendingInvoice.invoiceDate, finalPendingInvoice.paymentTerms)}, Amount: £${(finalPendingInvoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(finalPendingInvoice.serviceCharge) || 0) + ((finalPendingInvoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(finalPendingInvoice.serviceCharge) || 0)) * (Number(finalPendingInvoice.taxRate) || 0))).toFixed(2)}.`,
+    //   };
+    //   if (pdfFile && navigator.canShare({ files: [pdfFile] })) {
+    //     shareData.files = [pdfFile];
+    //   } else if (!pdfFile && wasNewInvoiceFlow) { // Check if it was the new invoice flow
+    //      alert("Invoice will be shared as text. PDF can be shared after viewing the saved invoice.");
+    //   } else if (!pdfFile && !wasNewInvoiceFlow) { // Existing invoice, PDF gen failed
+    //      alert("PDF generation failed or content not ready. Sharing text only.");
+    //   }
 
-      try {
-        await navigator.share(shareData);
-      } catch (error) {
-        console.error('Error sharing invoice:', error);
-      }
-    } else {
-      alert('Web Share API (with file sharing) not supported in your browser.');
-    }
+    //   try {
+    //     await navigator.share(shareData);
+    //   } catch (error) {
+    //     console.error('Error sharing invoice:', error);
+    //   }
+    // } else {
+    //   alert('Web Share API (with file sharing) not supported in your browser.');
+    // }
 
     if (wasNewInvoiceFlow) {
       // Form closes, navigates to view the new pending invoice.
-      closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`); 
+      // closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`); 
+    // Pass a state to trigger the share action after navigation.
+      setIsSendOptionsModalOpen(false); // Close modal before navigating
+      closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`, { state: { triggerAction: 'share' } });
     } else {
+      // For existing invoices, execute directly
+      await executeShareAction(finalPendingInvoice);
       setIsSendOptionsModalOpen(false);
     }
   };
@@ -425,6 +462,81 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
     setInvoiceForSendOptions(formData);
     setIsSendOptionsModalOpen(true);
   };
+
+  // Extracted logic for actually performing the email action
+  const executeEmailAction = async (invoiceToEmail) => {
+    console.log("[executeEmailAction] Started for", invoiceToEmail.id, "Ref available:", !!invoiceViewRef.current);
+    const input = invoiceViewRef.current; // Should be available now
+    let pdfGenerated = false;
+
+    if (input) {
+      pdfGenerated = await generatePDF(invoiceToEmail, input);
+    } else {
+      alert("Invoice view not ready for PDF generation. Composing email without PDF.");
+    }
+
+    // Show guide message instead of alert
+    if (pdfGenerated) {
+      setGuideMessageText("The invoice PDF has been downloaded to your default downloads folder. An email draft will now open; please attach the downloaded PDF to your email.");
+      setIsGuideMessageOpen(true);
+    }
+    
+    console.log("[executeEmailAction] Constructing mailto link for", invoiceToEmail.clientEmail);
+    const mailtoLink = `mailto:${invoiceToEmail.clientEmail}?subject=Invoice #${invoiceToEmail.id.substring(0,8)} from BarMiConstruction&body=Dear ${invoiceToEmail.clientName},%0D%0A%0D%0APlease find your invoice attached (invoice-${invoiceToEmail.id.substring(0,8)}.pdf).%0D%0A%0D%0AInvoice ID: ${invoiceToEmail.id.substring(0,8)}%0D%0ADue Date: ${invoiceToEmail.paymentDueDate || calculateDueDate(invoiceToEmail.invoiceDate, invoiceToEmail.paymentTerms)}%0D%0ATotal Amount: £${(invoiceToEmail.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToEmail.serviceCharge) || 0) + ((invoiceToEmail.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToEmail.serviceCharge) || 0)) * (Number(invoiceToEmail.taxRate) || 0))).toFixed(2)}%0D%0A%0D%0AThank you,%0D%0ABarMiConstruction`;
+    console.log("[executeEmailAction] Attempting to open mailto link.");
+    window.open(mailtoLink, '_blank');
+    console.log("[executeEmailAction] mailto link action dispatched.");
+  };
+
+  // Extracted logic for actually performing the share action
+  const executeShareAction = async (invoiceToShare) => {
+    console.log("[executeShareAction] Started for", invoiceToShare.id, "Ref available:", !!invoiceViewRef.current);
+    const input = invoiceViewRef.current; // Should be available now
+    let pdfFile = null;
+
+    if (input) {
+      console.log("[executeShareAction] Attempting to generate PDF for sharing...");
+      pdfFile = await generatePDF(invoiceToShare, input, true);
+      console.log("[executeShareAction] PDF generation for sharing result:", pdfFile);
+    } else {
+      console.warn("[executeShareAction] invoiceViewRef.current (input) is null. Cannot generate PDF.");
+    }
+
+    if (navigator.share && navigator.canShare) {
+     console.log("[executeShareAction] Web Share API is available.");
+     const shareData = {
+        title: `Invoice #${invoiceToShare.id.substring(0,8)} from BarMiConstruction`,
+        text: `Invoice from BarMiConstruction for ${invoiceToShare.clientName}. Due: ${invoiceToShare.paymentDueDate || calculateDueDate(invoiceToShare.invoiceDate, invoiceToShare.paymentTerms)}, Amount: £${(invoiceToShare.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToShare.serviceCharge) || 0) + ((invoiceToShare.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToShare.serviceCharge) || 0)) * (Number(invoiceToShare.taxRate) || 0))).toFixed(2)}.`,
+        // url: window.location.href // Optionally share the URL too
+      };
+
+      console.log("[executeShareAction] Checking pdfFile and navigator.canShare for the file. pdfFile:", pdfFile);
+      if (pdfFile && navigator.canShare({ files: [pdfFile] })) {
+        console.log("[executeShareAction] navigator.canShare({ files: [pdfFile] }) is TRUE. Adding file to shareData.");
+        shareData.files = [pdfFile];
+      } else if (!pdfFile) {
+        console.warn("[executeShareAction] pdfFile is null or undefined. Sharing text only.");
+         alert("PDF generation failed or content not ready. Sharing text only.");
+      } else if (pdfFile && !navigator.canShare({ files: [pdfFile] })) {
+        console.warn("[executeShareAction] pdfFile exists, but navigator.canShare({ files: [pdfFile] }) is FALSE. Sharing text only.");
+        alert("Your browser can share, but not this PDF file type/size. Sharing text only.");
+      }
+
+      try {
+        console.log("[executeShareAction] Attempting navigator.share with data:", JSON.stringify(shareData));
+        await navigator.share(shareData);
+        console.log("[executeShareAction] navigator.share completed successfully or dialog shown.");
+      } catch (error) {
+        console.error('[executeShareAction] Error sharing invoice:', error);
+        alert(`Sharing failed: ${error.message}`);
+      }
+    } else {
+      console.warn("[executeShareAction] Web Share API not supported or canShare is false.");
+      alert('Web Share API (with file sharing) not supported in your browser.');
+    }
+  };
+
+
 
   const isFormActive = isNew || isEditMode;
 
@@ -560,6 +672,17 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
         onPrint={handlePrintInvoice}
         onShare={handleShareInvoice}
       />
+    {isGuideMessageOpen && (
+        <div className="modal-overlay guide-message-overlay">
+          <div className="modal-content guide-message-modal">
+            <h3>Quick Guide</h3>
+            <p>{guideMessageText}</p>
+            <button onClick={() => setIsGuideMessageOpen(false)} className="button-primary">
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
