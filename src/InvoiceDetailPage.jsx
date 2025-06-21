@@ -1,6 +1,7 @@
 import { useMatch, useNavigate, useParams, useLocation } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
+import { useInvoiceForm } from './hooks/useInvoiceForm';
 import html2canvas from 'html2canvas';
 import './InvoiceDetailPage.css';
 import './FormStyles.css'; // Assuming general form styles are here
@@ -26,8 +27,10 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
   const location = useLocation();
   const { invoiceId } = useParams();
 
+  const existingInvoice = invoiceId && invoices ? invoices.find(inv => inv.id === invoiceId) : null;
+  const { formData, setFormData, errorMessage, setErrorMessage, validateForm, handleChange, handleItemChange, addItem, deleteItem } = useInvoiceForm(existingInvoice);
+
   const isNew = !invoiceId && !!isNewInvoiceRoute;
-  const [errorMessage, setErrorMessage] = useState('');
   const [isEditMode, setIsEditMode] = useState(isNew); // Start in edit mode if new
   const [originalInvoiceData, setOriginalInvoiceData] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -40,36 +43,7 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
   const [currentMailtoLink, setCurrentMailtoLink] = useState(''); // To store the mailto link
   const invoiceViewRef = useRef(null);
 
-
-
   const ANIMATION_DURATION = 400;
-
-  const initialFormData = {
-    senderStreet: 'Office G14 Fairbourne Drive Atterbury',
-    senderCity: 'Milton Keynes',
-    senderPostCode: 'MK10 9RG',
-    senderCountry: 'United Kingdom',
-    senderPhone: '+44 1908 040246',
-    clientName: '',
-    clientEmail: '',
-    clientStreet: '',
-    clientCity: '',
-    clientPostCode: '',
-    clientCountry: '',
-    clientPhone: '',
-    invoiceDate: new Date().toISOString().slice(0, 10),
-    paymentTerms: '30',
-    projectDescription: '',
-    paymentDueDate: '',
-    items: [],
-    servicesDescription: '',
-    serviceCharge: 0,
-    taxRate: 0.20,
-    notes: "Thank you for your business!",
-    status: 'draft', // New invoices start as draft
-  };
-
-  const [formData, setFormData] = useState(initialFormData);
 
   const calculateDueDate = (invoiceDateStr, paymentTermsStr) => {
     if (!invoiceDateStr || !paymentTermsStr) return '';
@@ -80,28 +54,19 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
     return date.toISOString().slice(0, 10);
   };
 
-  const generateNotesWithDueDate = (dueDate, baseNote = "Thank you for your business!") => {
-    return dueDate ? `${baseNote}\nPayment is due by ${dueDate}.` : `${baseNote}\nPayment terms will apply.`;
-  };
-
   useEffect(() => {
     console.log('[InvoiceDetailPage useEffect] Running. invoiceId:', invoiceId, 'isNew:', isNew, 'location.state:', location.state);
 
     if (invoiceId && invoices) {
-      const existingInvoice = invoices.find(inv => inv.id === invoiceId);
       if (existingInvoice) {
-        const dueDate = existingInvoice.paymentDueDate || calculateDueDate(existingInvoice.invoiceDate, existingInvoice.paymentTerms);
-        const notes = existingInvoice.notes || generateNotesWithDueDate(dueDate, existingInvoice.notes?.split('\n')[0] || "Thank you for your business!");
-        const fullExistingData = { ...initialFormData, ...existingInvoice, paymentDueDate: dueDate, notes: notes };
-        setFormData(fullExistingData);
-        setOriginalInvoiceData(fullExistingData);
+        setOriginalInvoiceData(existingInvoice);
         setIsEditMode(false); // Start in view mode for existing invoices
 
         console.log('[InvoiceDetailPage useEffect] Checking for showSendOptions. location.state:', location.state, 'existingInvoice.id:', existingInvoice.id, 'invoiceId:', invoiceId);
         // Handle opening send options modal if requested by navigation state
         if (location.state?.showSendOptions && existingInvoice.id === invoiceId) {
           console.log('[InvoiceDetailPage useEffect] showSendOptions condition met. Opening modal.');
-          setInvoiceForSendOptions(fullExistingData);
+          setInvoiceForSendOptions(existingInvoice);
           setIsSendOptionsModalOpen(true);
           navigate(location.pathname, { replace: true, state: {} });
         }
@@ -109,21 +74,15 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
           console.log('[InvoiceDetailPage useEffect] Checking for triggerAction. location.state:', location.state, 'existingInvoice.id:', existingInvoice.id, 'invoiceId:', invoiceId);
         // Handle triggering email/share action if requested by navigation state
         if (location.state?.triggerAction && existingInvoice.id === invoiceId) {
-         // if (location.state.triggerAction === 'email') {
-        //     executeEmailAction(fullExistingData);
-        //   } else if (location.state.triggerAction === 'share') {
-        //     executeShareAction(fullExistingData);
-        //   }
+         
         //   // Clear the triggerAction from state after processing
         //   navigate(location.pathname, { replace: true, state: {} });
             const actionToTrigger = location.state.triggerAction;
              console.log('[InvoiceDetailPage useEffect] triggerAction condition met. Action:', actionToTrigger);
-             const dataForAction = { ...fullExistingData }; // Capture data to avoid issues with stale closures
-
+             const dataForAction = { ...existingInvoice }; // Capture data to avoid issues with stale closures
           // Clear the triggerAction from state immediately so it doesn't re-trigger
           // navigate(location.pathname, { replace: true, state: {} }); 
-          // ^ We'll move this clearing to *after* the action is attempted or if it's not one of ours.
-
+         
           // Defer the execution slightly to ensure DOM is ready and to help with trusted event context
           setTimeout(() => {
              console.log(`[InvoiceDetailPage useEffect setTimeout] Attempting to trigger action: ${actionToTrigger} for invoice: ${dataForAction.id}`);
@@ -142,25 +101,11 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
         navigate('/');
       }
     } else if (isNew) {
-      console.log('[InvoiceDetailPage useEffect] Setting up for new invoice.');
-      const initialDueDate = calculateDueDate(initialFormData.invoiceDate, initialFormData.paymentTerms);
-      const initialNotes = generateNotesWithDueDate(initialDueDate);
-      setFormData({ ...initialFormData, paymentDueDate: initialDueDate, notes: initialNotes, status: 'draft' });
       setIsEditMode(true); // New invoices start in edit mode
     }
   }, [invoiceId, invoices, isNew, navigate, location.state]);
 
-  useEffect(() => {
-    if (formData.invoiceDate && formData.paymentTerms) {
-      const newDueDate = calculateDueDate(formData.invoiceDate, formData.paymentTerms);
-      const baseNote = formData.notes?.split('\n')[0] || "Thank you for your business!";
-      const newNotes = generateNotesWithDueDate(newDueDate, baseNote);
-      if (newDueDate !== formData.paymentDueDate || newNotes !== formData.notes) {
-        setFormData(prev => ({ ...prev, paymentDueDate: newDueDate, notes: newNotes }));
-      }
-    }
-  }, [formData.invoiceDate, formData.paymentTerms, formData.notes]);
-  
+
     // Function to generate a new unique invoice ID
   // This function is now async because it interacts with the backend API
   const generateNewInvoiceId = async () => {
@@ -177,63 +122,13 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleItemChange = (e, index) => {
-    const { name, value } = e.target;
-    const newItems = [...formData.items];
-    newItems[index] = {
-      ...newItems[index],
-      [name]: name === 'quantity' || name === 'price' ? parseFloat(value) || 0 : value
-    };
-    setFormData(prev => ({ ...prev, items: newItems }));
-  };
-
-  const addItem = () => {
-    setFormData(prev => ({
-      ...prev,
-      items: [...prev.items, { name: '', quantity: 1, price: 0, total: 0 }]
-    }));
-  };
-
-  const deleteItem = (indexToDelete) => {
-    setFormData(prev => ({
-      ...prev,
-      items: prev.items.filter((_, index) => index !== indexToDelete)
-    }));
-  };
-
-  const validateForm = () => {
-    setErrorMessage('');
-    const requiredFields = {
-      senderStreet: "Sender Street Address", senderCity: "Sender City", senderPostCode: "Sender Post Code", senderCountry: "Sender Country",
-      clientName: "Client's Name", clientEmail: "Client's Email", clientStreet: "Client Street Address", clientCity: "Client City", clientPostCode: "Client Post Code", clientCountry: "Client Country",
-      invoiceDate: "Invoice Date", paymentTerms: "Payment Terms", projectDescription: "Project Description",
-    };
-    for (const [field, MappedName] of Object.entries(requiredFields)) {
-      const value = formData[field];
-      if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
-        setErrorMessage(`Please fill in the ${MappedName} field.`);
-        return false;
-      }
-    }
-    if (formData.items.some(item => !item.name || item.quantity <= 0 || item.price <= 0)) {
-        setErrorMessage("All items must have a name, and quantity/price must be greater than zero.");
-        return false;
-    }
-    return true;
-  };
-
   // Ensure closeFormAndNavigate is defined to accept and use navigationState
 const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure navigationState is a parameter
   setIsFormClosing(true);
   setTimeout(() => {
     setIsEditMode(false);
     setIsFormClosing(false);
-    setFormData(initialFormData); // Reset form for next time
+    // setFormData(initialFormData); // Resetting is now handled by the hook based on `existingInvoice`
     navigate(path, navigationState); // Pass the state here
   }, ANIMATION_DURATION);
 };
@@ -249,15 +144,13 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     if (!isNew && formData.id) {
       console.warn("handleSaveDraft called unexpectedly for an existing, non-new invoice. Use 'Save Changes' to update.");
       // To prevent accidental creation of a new draft from an existing invoice's edit form,
-      // you might want to return or show an error.
-      // For now, we'll proceed cautiously, but this path should ideally not be hit
       // if onSaveDraft is only wired for new invoices.
       // If the intention IS to "Save a Copy as Draft", this logic would be different.
     }
 
     const newId = await generateNewInvoiceId();
     const draftInvoiceData = { ...formData, status: 'draft', id: newId };
-    const newDraft = addInvoice(draftInvoiceData); // addInvoice from App.jsx
+    const newDraft = await addInvoice(draftInvoiceData); // addInvoice from App.jsx
 
     if (newDraft && newDraft.id) {
       closeFormAndNavigate(`/invoice/${newDraft.id}`);
@@ -275,17 +168,6 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     setInvoiceForSendOptions({ ...formData }); // Pass current form data to the modal
     // The actual saving (and ID generation if new) happens when an action is chosen in the modal
     setIsSendOptionsModalOpen(true);
-    
-    // if (isNew) { // Only close the form part if it's a new invoice
-    //   setIsFormClosing(true);
-    //   setTimeout(() => {
-    //     setIsEditMode(false); // This will make isFormActive false, hiding the form
-    //     setIsFormClosing(false);
-    //     // DO NOT call setFormData(initialFormData) here
-    //     // DO NOT call navigate('/') here
-    //     // These will be handled by the modal's outcome (email, share, or close)
-    //   }, ANIMATION_DURATION);
-    // }
   };
   
   const handleSendDraft = async () => { // For existing drafts
@@ -295,10 +177,10 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     }
   };
 
-  const handleUpdateInvoice = () => { // "Save Changes" when editing an existing draft
+  const handleUpdateInvoice = async() => { // "Save Changes" when editing an existing draft
     if (!validateForm()) return;
     const updatedData = { ...formData, status: 'draft' }; // Saving changes keeps it as draft
-    updateInvoice(updatedData);
+    await updateInvoice(updatedData);
     setOriginalInvoiceData(updatedData);
     setIsFormClosing(true);
     setTimeout(() => {
@@ -315,26 +197,23 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     setErrorMessage('');
     setIsFormClosing(true);
     setTimeout(() => {
-      setFormData(originalInvoiceData || initialFormData);
+      setFormData(originalInvoiceData);
       setIsEditMode(false);
       setIsFormClosing(false);
     }, ANIMATION_DURATION);
   };
 
   const handleDeleteInvoice = () => setIsDeleteModalOpen(true);
-  const confirmDelete = () => {
-    deleteInvoice(formData.id);
+  const confirmDelete = async () => {
+    await deleteInvoice(formData.id);
     setIsDeleteModalOpen(false);
     navigate('/');
   };
   const closeDeleteModal = () => setIsDeleteModalOpen(false);
 
-  const handleMarkAsPaid = () => {
-    if (formData.id && formData.status === 'pending') {
-      const paidInvoice = { ...formData, status: 'paid' };
-      updateInvoice(paidInvoice);
-      setFormData(paidInvoice); // Update local UI
-    }
+  const handleMarkAsPaid = async () => {
+    await markInvoiceAsPaid(formData.id);
+    setFormData(prev => ({ ...prev, status: 'paid'}));
   };
 
   const generatePDF = async (invoice, inputElement, forSharing = false) => {
@@ -376,11 +255,11 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     };
     // Check if this is a new invoice being saved for the first time as pending
     if (!invoiceDataToSave.id) { // This implies it came from the new invoice form via modal
-      const newlyAddedInvoice = addInvoice(finalInvoice);
+      const newlyAddedInvoice = await addInvoice(finalInvoice);
       setFormData(newlyAddedInvoice); // Update local state with the full new invoice
       return newlyAddedInvoice;
     } else { // It was an existing draft
-      updateInvoice(finalInvoice);
+      await updateInvoice(finalInvoice);
       setFormData(finalInvoice); // Update local state
       return finalInvoice;
     }
@@ -458,7 +337,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     // In this case, save as draft and navigate.
     if (invoiceForSendOptions && !invoiceForSendOptions.id && isNew) {
      const draftInvoice = { ...invoiceForSendOptions, status: 'draft', id: await generateNewInvoiceId() }; // Await ID generation
-     const newDraft = addInvoice(draftInvoice);
+     const newDraft = await addInvoice(draftInvoice);
       setIsSendOptionsModalOpen(false); // Close the modal
       closeFormAndNavigate(`/invoice/${newDraft.id}`); // Navigate to view the new draft
     } else {
@@ -619,12 +498,12 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
             title="Confirm Deletion"
             message={`Are you sure you want to delete invoice#: ${formData.id}? This action cannot be undone.`}
           />
-          <button onClick={() => navigate('/')} className="go-back-button">
-            <svg width="7" height="10" xmlns="http://www.w3.org/2000/svg"><path d="M6.342.886L2.114 5.114l4.228 4.228" stroke="#7C5DFA" strokeWidth="2" fill="none" fillRule="evenodd"/></svg>
-            <span>Go back</span>
-          </button>
-          
+
           <div className="invoice-view-header">
+            <button onClick={() => navigate('/')} className="go-back-button">
+              <svg width="7" height="10" xmlns="http://www.w3.org/2000/svg"><path d="M6.342.886L2.114 5.114l4.228 4.228" stroke="#7C5DFA" strokeWidth="2" fill="none" fillRule="evenodd"/></svg>
+              <span>Go back</span>
+            </button>
             <div className="status-info">
               <span>Status</span>
               <div className={`status-badge status-${formData.status}`}>
@@ -641,7 +520,8 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
                 onDownloadPDF={() => handleDownloadPDFInvoice(formData)}
                 onPrint={handlePrintInvoice}
                 onSendDraft={handleSendDraft}
-                onOpenSendOptions={openSendOptionsForExisting}
+                onEmail={() => executeEmailAction(formData)}
+                onShare={() => executeShareAction(formData)}
               />
             </div>
           </div>

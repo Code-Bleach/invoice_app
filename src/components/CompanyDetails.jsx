@@ -5,12 +5,16 @@ function CompanyDetails({ isNew, formData, handleChange }) {
     return (
       <section className="company-details-form form-section"> {/* Changed class name for clarity */}
         <h2 className="form-section-title">Bill From</h2>
-          <div className="form-grid form-grid-col-1"> {/* Street Address on its own line */}
+          <div className="form-grid form-grid-col-1"> {/* Company Name and Street Address on same line */}
             <div>
-              <label htmlFor="senderStreet">Street Address</label>
-              <input type="text" id="senderStreet" name="senderStreet" value={formData.senderStreet || ''} onChange={handleChange} placeholder="e.g. 19 Union Terrace" />
+              <label htmlFor="senderName">Company</label>
+              <input type='text' id="senderName" name="senderName" value={formData.senderName} onChange={handleChange} placeholder="BarMi Prestige Construction Ltd" />
             </div>
           </div>
+            <div>
+              <label htmlFor="senderStreet">Address</label>
+              <input type="text" id="senderStreet" name="senderStreet" value={formData.senderStreet} onChange={handleChange} placeholder="e.g. 19 Union Terrace" />
+            </div>
           <div className="form-grid form-grid-col-3"> {/* City, Post Code, Country */}
             <div>
               <label htmlFor="senderCity">City</label>
@@ -24,11 +28,17 @@ function CompanyDetails({ isNew, formData, handleChange }) {
               <label htmlFor="senderCountry">Country</label>
               <input type="text" id="senderCountry" name="senderCountry" value={formData.senderCountry || ''} onChange={handleChange} placeholder="e.g. United Kingdom" />
             </div>
-          </div>
-          <div className="form-grid form-grid-col-1"> {/* Phone on its own line */}
             <div>
               <label htmlFor="senderPhone">Phone</label>
               <input type="tel" id="senderPhone" name="senderPhone" value={formData.senderPhone || ''} onChange={handleChange} placeholder="e.g. +44 20 7946 0000" />
+            </div>
+            <div>
+              <label htmlFor="senderEmail">Email</label>
+              <input type="email" id="senderEmail" name="senderEmail" value={formData.senderEmail || ''} onChange={handleChange} placeholder="info@barmi" />
+            </div>
+            <div>
+              <label htmlFor="senderWebsite">Email</label>
+              <input type="text" id="senderWebsite" name="senderWebsite" value={formData.senderWebsite || ''} onChange={handleChange} placeholder="barmiconstruction.co.uk" />
             </div>
           </div>
 
