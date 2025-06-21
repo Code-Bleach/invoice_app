@@ -16,7 +16,7 @@ function InvoiceListItem({ invoice }) {
   return (
     <Link to={`/invoice/${invoice.id}`} className="invoice-list-item-link">
       <div className={`invoice-list-item status-${invoice.status}`}>
-        <span className="invoice-id">#{invoice.id.substring(0, 8)}</span> {/* Shortened ID */}
+        <span className="invoice-id">#{invoice.id.substring(0, 13)}</span> {/* Shortened ID */}
         <span className="due-date">Due {dueDate}</span>
         <span className="client-name">{invoice.clientName || 'N/A'}</span>
         <span className="total-amount">&pound;{totalAmount.toFixed(2)}</span>

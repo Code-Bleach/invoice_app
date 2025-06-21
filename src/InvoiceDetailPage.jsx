@@ -1,7 +1,6 @@
 import { useMatch, useNavigate, useParams, useLocation } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
-import { format } from 'date-fns'; // Assuming you have date-fns installed for formatting
 import html2canvas from 'html2canvas';
 import './InvoiceDetailPage.css';
 import './FormStyles.css'; // Assuming general form styles are here
@@ -15,8 +14,7 @@ import InvoiceTotals from './components/InvoiceTotals';
 import Notes from './components/Notes';
 import Actions from './components/Actions';
 import FormErrorMessage from './components/FormErrorMessage';
-import { getCounterDB, setCounterDB } from './db'; // Import DB counter functions
-import ConfirmationModal from './components/ConfirmationModal';
+import ConfirmationModal from './components/ConfirmationModal';    
 import SendOptionsModal from './components/SendOptionsModal';
 // import InvoiceListItem from './components/InvoiceListItem'; // For status badge styling (already in InvoiceDetailPage.css)
 import barmilogoLight from './assets/barmilogo-light.png';
@@ -164,23 +162,19 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
   }, [formData.invoiceDate, formData.paymentTerms, formData.notes]);
   
     // Function to generate a new unique invoice ID
-  // This function is now async because it interacts with IndexedDB
+  // This function is now async because it interacts with the backend API
   const generateNewInvoiceId = async () => {
-    const now = new Date();
-    const month = format(now, 'MM'); // e.g., '06'
-    const year = format(now, 'yy');   // e.g., '25'
-    const counterKey = format(now, 'yyyy-MM'); // e.g., '2025-06'
-
+    
     try {
-      const currentCounter = await getCounterDB(counterKey);
-      const nextCounter = currentCounter + 1;
-      await setCounterDB(counterKey, nextCounter);
-      const paddedCounter = String(nextCounter).padStart(3, '0');
-      return `BPC${month}${year}${paddedCounter}`;
+      const response = await fetch('/api/generate-id', { method: 'POST' });
+      if (!response.ok) throw new Error('Failed to generate ID from server');
+      const data = await response.json();
+      return data.id;
     } catch (error) {
       console.error("Error generating sequential invoice ID:", error);
+    // Fallback to a less ideal, client-side unique ID if server fails
+      return `ERR-${Date.now()}`;
     }
-    return `INV-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
   };
 
   const handleChange = (e) => {
