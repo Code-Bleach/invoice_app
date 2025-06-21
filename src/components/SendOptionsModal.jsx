@@ -31,7 +31,7 @@ function SendOptionsModal({ isOpen, onClose, invoiceData, onEmail, onDownloadPDF
     <div className="modal-overlay send-options-overlay">
       <div className="modal-content send-options-modal">
         <h2>Send or Share Invoice</h2>
-        <p>Choose an action for invoice #{invoiceData?.id?.substring(0,8)}:</p>
+        <p>Choose an action for invoice #{invoiceData?.id}:</p>
         <div className="send-options-actions">
           <button onClick={handleEmail} className="button-primary button-icon-text" aria-label="Email Invoice">
             <svg width="25" height="25" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

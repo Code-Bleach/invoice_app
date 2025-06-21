@@ -1,8 +1,8 @@
 import { useMatch, useNavigate, useParams, useLocation } from 'react-router-dom';
 import React, { useState, useEffect, useRef } from 'react';
 import jsPDF from 'jspdf';
+import { format } from 'date-fns'; // Assuming you have date-fns installed for formatting
 import html2canvas from 'html2canvas';
-
 import './InvoiceDetailPage.css';
 import './FormStyles.css'; // Assuming general form styles are here
 
@@ -15,6 +15,7 @@ import InvoiceTotals from './components/InvoiceTotals';
 import Notes from './components/Notes';
 import Actions from './components/Actions';
 import FormErrorMessage from './components/FormErrorMessage';
+import { getCounterDB, setCounterDB } from './db'; // Import DB counter functions
 import ConfirmationModal from './components/ConfirmationModal';
 import SendOptionsModal from './components/SendOptionsModal';
 // import InvoiceListItem from './components/InvoiceListItem'; // For status badge styling (already in InvoiceDetailPage.css)
@@ -37,7 +38,7 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
   const [invoiceForSendOptions, setInvoiceForSendOptions] = useState(null);
   const [isGuideMessageOpen, setIsGuideMessageOpen] = useState(false);
   const [guideMessageText, setGuideMessageText] = useState('');
-   const [dontShowEmailGuideAgain, setDontShowEmailGuideAgain] = useState(() => localStorage.getItem('dontShowEmailGuide') === 'true');
+  const [dontShowEmailGuideAgain, setDontShowEmailGuideAgain] = useState(() => localStorage.getItem('dontShowEmailGuide') === 'true');
   const [currentMailtoLink, setCurrentMailtoLink] = useState(''); // To store the mailto link
   const invoiceViewRef = useRef(null);
 
@@ -163,7 +164,22 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
   }, [formData.invoiceDate, formData.paymentTerms, formData.notes]);
   
     // Function to generate a new unique invoice ID
-  const generateNewInvoiceId = () => {
+  // This function is now async because it interacts with IndexedDB
+  const generateNewInvoiceId = async () => {
+    const now = new Date();
+    const month = format(now, 'MM'); // e.g., '06'
+    const year = format(now, 'yy');   // e.g., '25'
+    const counterKey = format(now, 'yyyy-MM'); // e.g., '2025-06'
+
+    try {
+      const currentCounter = await getCounterDB(counterKey);
+      const nextCounter = currentCounter + 1;
+      await setCounterDB(counterKey, nextCounter);
+      const paddedCounter = String(nextCounter).padStart(3, '0');
+      return `BPC${month}${year}${paddedCounter}`;
+    } catch (error) {
+      console.error("Error generating sequential invoice ID:", error);
+    }
     return `INV-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
   };
 
@@ -230,24 +246,40 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
  // Make sure this function is correctly passing navigationState if it's used elsewhere with state
 
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => { // Mark as async
     if (!validateForm()) return;
-     const draftInvoice = { ...formData, status: 'draft', id: formData.id || generateNewInvoiceId() };
-    if (formData.id) {
-      updateInvoice(draftInvoice);
-      setOriginalInvoiceData(draftInvoice); // Update original data after saving changes to draft
-      closeFormAndNavigate(`/invoice/${draftInvoice.id}`); // Go to view mode of this draft
+
+    // "Save as Draft" is intended for creating a new draft from the current form.
+    // It should not update an existing invoice. "Save Changes" handles updates.
+    // The `isNew` flag (derived from the route) is the most reliable indicator.
+    if (!isNew && formData.id) {
+      console.warn("handleSaveDraft called unexpectedly for an existing, non-new invoice. Use 'Save Changes' to update.");
+      // To prevent accidental creation of a new draft from an existing invoice's edit form,
+      // you might want to return or show an error.
+      // For now, we'll proceed cautiously, but this path should ideally not be hit
+      // if onSaveDraft is only wired for new invoices.
+      // If the intention IS to "Save a Copy as Draft", this logic would be different.
+    }
+
+    const newId = await generateNewInvoiceId();
+    const draftInvoiceData = { ...formData, status: 'draft', id: newId };
+    const newDraft = addInvoice(draftInvoiceData); // addInvoice from App.jsx
+
+    if (newDraft && newDraft.id) {
+      closeFormAndNavigate(`/invoice/${newDraft.id}`);
     } else {
-      const newDraft = addInvoice(draftInvoice);
-      closeFormAndNavigate(`/invoice/${newDraft.id}`); // Go to view mode of new draft
+      console.error("Failed to save draft: addInvoice did not return the expected new draft object with an ID.");
+      setErrorMessage("There was an error saving the draft. Please try again.");
     }
   };
 
-  const handleSaveAndSend = () => { // For new invoices
+  const handleSaveAndSend = async () => { // For new invoices
+    // This function needs to be async because finalizeAndSaveAsPending is now async
     if (!validateForm()) return;
    // For new invoices, just open the modal. The form remains.
     // The decision to save as draft/pending and navigate happens based on modal action.
     setInvoiceForSendOptions({ ...formData }); // Pass current form data to the modal
+    // The actual saving (and ID generation if new) happens when an action is chosen in the modal
     setIsSendOptionsModalOpen(true);
     
     // if (isNew) { // Only close the form part if it's a new invoice
@@ -262,7 +294,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     // }
   };
   
-  const handleSendDraft = () => { // For existing drafts
+  const handleSendDraft = async () => { // For existing drafts
     if (formData.id && formData.status === 'draft') {
       setInvoiceForSendOptions({ ...formData });
       setIsSendOptionsModalOpen(true);
@@ -328,9 +360,9 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       if (forSharing) {
         const pdfBlob = pdf.output('blob');
-        return new File([pdfBlob], `invoice-${invoice.id?.substring(0,8) || 'new'}.pdf`, { type: 'application/pdf' });
+        return new File([pdfBlob], `invoice-${invoice.id || 'new'}.pdf`, { type: 'application/pdf' });
       } else {
-        pdf.save(`invoice-${invoice.id?.substring(0,8) || 'new'}.pdf`); // This is standard
+        pdf.save(`invoice-${invoice.id || 'new'}.pdf`); // This is standard
         return true;
       }
     } catch (error) {
@@ -341,12 +373,12 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
 
   // This function now handles saving/updating the invoice to 'pending' status
   // It's called by handleEmailInvoice and handleShareInvoice
-  const finalizeAndSaveAsPending = (invoiceDataToSave) => {
+  const finalizeAndSaveAsPending = async (invoiceDataToSave) => { // Mark as async
      const finalInvoice = {
       ...invoiceDataToSave,
       status: 'pending',
       // Only generate a new ID if one doesn't exist (for new invoices from the modal)
-      id: invoiceDataToSave.id || generateNewInvoiceId()
+      id: invoiceDataToSave.id || await generateNewInvoiceId() // Await the async ID generation
     };
     // Check if this is a new invoice being saved for the first time as pending
     if (!invoiceDataToSave.id) { // This implies it came from the new invoice form via modal
@@ -364,7 +396,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     // If invoiceDataFromModal has no ID, it's from a new invoice form.
     // Otherwise, it's an existing draft being sent.
     const wasNewInvoiceFlow = !invoiceDataFromModal.id;
-    const finalPendingInvoice = finalizeAndSaveAsPending(invoiceDataFromModal); // Saves as pending, gets ID if new
+    const finalPendingInvoice = await finalizeAndSaveAsPending(invoiceDataFromModal);
 
     if (wasNewInvoiceFlow) {
       // Form closes, navigates to view the new pending invoice.
@@ -409,41 +441,14 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
   const handleShareInvoice = async (invoiceDataFromModal) => {
     // If invoiceDataFromModal has no ID, it's from a new invoice form.
     const wasNewInvoiceFlow = !invoiceDataFromModal.id;
-    const finalPendingInvoice = finalizeAndSaveAsPending(invoiceDataFromModal); // Saves as pending, gets ID if new
-
-    // const input = invoiceViewRef.current; // Will be null if called from new invoice form
-    // let pdfFile = null;
-
-    // if (input) { // If view is rendered
-    //   pdfFile = await generatePDF(finalPendingInvoice, input, true);
-    // }
-
-    // if (navigator.share && navigator.canShare) {
-    //   const shareData = {
-    //     title: `Invoice #${finalPendingInvoice.id.substring(0,8)} from BarMiConstruction`,
-    //     text: `Invoice from BarMiConstruction for ${finalPendingInvoice.clientName}. Due: ${finalPendingInvoice.paymentDueDate || calculateDueDate(finalPendingInvoice.invoiceDate, finalPendingInvoice.paymentTerms)}, Amount: £${(finalPendingInvoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(finalPendingInvoice.serviceCharge) || 0) + ((finalPendingInvoice.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(finalPendingInvoice.serviceCharge) || 0)) * (Number(finalPendingInvoice.taxRate) || 0))).toFixed(2)}.`,
-    //   };
-    //   if (pdfFile && navigator.canShare({ files: [pdfFile] })) {
-    //     shareData.files = [pdfFile];
-    //   } else if (!pdfFile && wasNewInvoiceFlow) { // Check if it was the new invoice flow
-    //      alert("Invoice will be shared as text. PDF can be shared after viewing the saved invoice.");
-    //   } else if (!pdfFile && !wasNewInvoiceFlow) { // Existing invoice, PDF gen failed
-    //      alert("PDF generation failed or content not ready. Sharing text only.");
-    //   }
-
-    //   try {
-    //     await navigator.share(shareData);
-    //   } catch (error) {
-    //     console.error('Error sharing invoice:', error);
-    //   }
-    // } else {
-    //   alert('Web Share API (with file sharing) not supported in your browser.');
-    // }
+    const finalPendingInvoice = await finalizeAndSaveAsPending(invoiceDataFromModal); // Await saving as pending
+     // This needs to be awaited too: const finalPendingInvoice = await finalizeAndSaveAsPending(invoiceDataFromModal);
 
     if (wasNewInvoiceFlow) {
       // Form closes, navigates to view the new pending invoice.
       // closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`); 
-    // Pass a state to trigger the share action after navigation.
+      setIsSendOptionsModalOpen(false); // Close modal before navigating
+      // Pass a state to trigger the share action after navigation.
       setIsSendOptionsModalOpen(false); // Close modal before navigating
       closeFormAndNavigate(`/invoice/${finalPendingInvoice.id}`, { state: { triggerAction: 'share' } });
     } else {
@@ -453,12 +458,12 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     }
   };
 
-  const handleModalCloseAction = () => {
+   const handleModalCloseAction = async () => {
     // This is called when the modal's "Close" button is clicked.
     // If invoiceForSendOptions has no ID, it means it was from the "Save & Send" of a new invoice.
     // In this case, save as draft and navigate.
     if (invoiceForSendOptions && !invoiceForSendOptions.id && isNew) {
-     const draftInvoice = { ...invoiceForSendOptions, status: 'draft', id: generateNewInvoiceId() };
+     const draftInvoice = { ...invoiceForSendOptions, status: 'draft', id: await generateNewInvoiceId() }; // Await ID generation
      const newDraft = addInvoice(draftInvoice);
       setIsSendOptionsModalOpen(false); // Close the modal
       closeFormAndNavigate(`/invoice/${newDraft.id}`); // Navigate to view the new draft
@@ -478,14 +483,14 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     const input = invoiceViewRef.current; // Should be available now
     let pdfGenerated = false;
 
-    if (input) {
+    if (input) { //If view is rendered
       pdfGenerated = await generatePDF(invoiceToEmail, input);
     } else {
       alert("Invoice view not ready for PDF generation. Composing email without PDF.");
     }
 
     // Define mailtoLink at the beginning of the function scope
-    const mailtoLink = `mailto:${invoiceToEmail.clientEmail}?subject=Invoice%20%23${invoiceToEmail.id.substring(0,8)}%20from%20BarMiConstruction&body=Dear%20${invoiceToEmail.clientName},%0D%0A%0D%0APlease%20find%20your%20invoice%20attached%20(invoice-${invoiceToEmail.id.substring(0,8)}.pdf).%0D%0A%0D%0AInvoice%20ID:%20${invoiceToEmail.id.substring(0,8)}%0D%0ADue%20Date:%20${invoiceToEmail.paymentDueDate || calculateDueDate(invoiceToEmail.invoiceDate, invoiceToEmail.paymentTerms)}%0D%0ATotal%20Amount:%20£${(invoiceToEmail.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToEmail.serviceCharge) || 0) + ((invoiceToEmail.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToEmail.serviceCharge) || 0)) * (Number(invoiceToEmail.taxRate) || 0))).toFixed(2)}%0D%0A%0D%0AThank%20you,%0D%0ABarMiConstruction`;
+    const mailtoLink = `mailto:${invoiceToEmail.clientEmail}?subject=Invoice %20%23${invoiceToEmail.id}%20from%20BarMiConstruction&body=Dear%20${invoiceToEmail.clientName},%0D%0A%0D%0APlease%20find%20your%20invoice%20attached%20(invoice-${invoiceToEmail.id}.pdf).%0D%0A%0D%0AInvoice%20ID:%20${invoiceToEmail.id}%0D%0ADue%20Date:%20${invoiceToEmail.paymentDueDate || calculateDueDate(invoiceToEmail.invoiceDate, invoiceToEmail.paymentTerms)}%0D%0ATotal%20Amount:%20£${(invoiceToEmail.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToEmail.serviceCharge) || 0) + ((invoiceToEmail.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToEmail.serviceCharge) || 0)) * (Number(invoiceToEmail.taxRate) || 0))).toFixed(2)}%0D%0A%0D%0AThank%20you,%0D%0ABarMiConstruction`;
 
     setCurrentMailtoLink(mailtoLink); // Store the link
 
@@ -508,7 +513,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
 
   // Extracted logic for actually performing the share action
   const executeShareAction = async (invoiceToShare) => {
-    console.log("[executeShareAction] Started for", invoiceToShare.id, "Ref available:", !!invoiceViewRef.current);
+    console.log("[executeShareAction] Started for", invoiceToShare.id, "Ref available:", !!invoiceViewRef.current); // invoiceToShare might not have ID yet if new
     const input = invoiceViewRef.current; // Should be available now
     let pdfFile = null;
 
@@ -523,7 +528,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     if (navigator.share && navigator.canShare) {
      console.log("[executeShareAction] Web Share API is available.");
      const shareData = {
-        title: `Invoice #${invoiceToShare.id.substring(0,8)} from BarMiConstruction`,
+        title: `Invoice #${invoiceToShare.id} from BarMiConstruction`,
         text: `Invoice from BarMiConstruction for ${invoiceToShare.clientName}. Due: ${invoiceToShare.paymentDueDate || calculateDueDate(invoiceToShare.invoiceDate, invoiceToShare.paymentTerms)}, Amount: £${(invoiceToShare.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToShare.serviceCharge) || 0) + ((invoiceToShare.items.reduce((acc, item) => acc + (item.quantity * item.price), 0) + (Number(invoiceToShare.serviceCharge) || 0)) * (Number(invoiceToShare.taxRate) || 0))).toFixed(2)}.`,
         // url: window.location.href // Optionally share the URL too
       };
@@ -554,8 +559,6 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     }
   };
 
-
-
   const isFormActive = isNew || isEditMode;
 
   return (
@@ -567,10 +570,11 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
             onClose={closeDeleteModal}
             onConfirm={confirmDelete}
             title="Confirm Deletion"
-            message={`Are you sure you want to delete invoice #${formData.id?.substring(0,8)}? This action cannot be undone.`}
+            message={`Are you sure you want to delete invoice#: ${formData.id}? This action cannot be undone.`}
           />
+
           <Header
-            title={isNew ? "New Invoice" : (isEditMode ? `Edit #${formData.id?.substring(0,8)}` : "Invoice")}
+             title={isNew ? "New Invoice" : (isEditMode ? `Edit #${formData.id}` : "Invoice")}
           />
           <FormErrorMessage message={errorMessage} onClose={() => setErrorMessage('')} />
           <div className="form-content-wrapper">
@@ -619,7 +623,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
             onClose={closeDeleteModal}
             onConfirm={confirmDelete}
             title="Confirm Deletion"
-            message={`Are you sure you want to delete invoice #${formData.id?.substring(0,8)}? This action cannot be undone.`}
+            message={`Are you sure you want to delete invoice#: ${formData.id}? This action cannot be undone.`}
           />
           <button onClick={() => navigate('/')} className="go-back-button">
             <svg width="7" height="10" xmlns="http://www.w3.org/2000/svg"><path d="M6.342.886L2.114 5.114l4.228 4.228" stroke="#7C5DFA" strokeWidth="2" fill="none" fillRule="evenodd"/></svg>
@@ -654,7 +658,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
             </div>
             <div className="invoice-main-info">
               <div className="id-description">
-                <h1><span style={{color: '#7E88C3'}}>#</span>{formData.id?.substring(0,8)}</h1>
+                <h1><span style={{color: '#7E88C3'}}>Invoice#: </span>{formData.id}</h1>
                 <p>{formData.projectDescription}</p>
               </div>
               <CompanyDetails isNew={false} formData={formData} />
