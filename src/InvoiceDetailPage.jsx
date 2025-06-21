@@ -20,6 +20,8 @@ import SendOptionsModal from './components/SendOptionsModal';
 // import InvoiceListItem from './components/InvoiceListItem'; // For status badge styling (already in InvoiceDetailPage.css)
 import barmilogoLight from './assets/barmilogo-light.png';
 import barmilogoDark from './assets/barmilogo-dark.png';
+import digitalStamp from './assets/digital-stamp.png'; //digital stamp png
+
 
 function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice, markInvoiceAsPaid, theme }) {
   const isNewInvoiceRoute = useMatch("/invoice/new");
@@ -44,15 +46,6 @@ function InvoiceDetailPage({ addInvoice, invoices, updateInvoice, deleteInvoice,
   const invoiceViewRef = useRef(null);
 
   const ANIMATION_DURATION = 400;
-
-  const calculateDueDate = (invoiceDateStr, paymentTermsStr) => {
-    if (!invoiceDateStr || !paymentTermsStr) return '';
-    const date = new Date(invoiceDateStr);
-    const terms = parseInt(paymentTermsStr, 10);
-    if (isNaN(terms) || terms < 0) return '';
-    date.setDate(date.getDate() + terms);
-    return date.toISOString().slice(0, 10);
-  };
 
   useEffect(() => {
     console.log('[InvoiceDetailPage useEffect] Running. invoiceId:', invoiceId, 'isNew:', isNew, 'location.state:', location.state);
@@ -131,6 +124,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     // setFormData(initialFormData); // Resetting is now handled by the hook based on `existingInvoice`
     navigate(path, navigationState); // Pass the state here
   }, ANIMATION_DURATION);
+
 };
  // Make sure this function is correctly passing navigationState if it's used elsewhere with state
 
@@ -227,10 +221,24 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
         windowHeight: inputElement.scrollHeight, scrollY: -window.scrollY
       });
       const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 295; // A4 height in mm
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+      let heightLeft = imgHeight;
+
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
       if (forSharing) {
         const pdfBlob = pdf.output('blob');
         return new File([pdfBlob], `invoice-${invoice.id || 'new'}.pdf`, { type: 'application/pdf' });
@@ -500,11 +508,11 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
           />
 
           <div className="invoice-view-header">
-            <button onClick={() => navigate('/')} className="go-back-button">
-              <svg width="7" height="10" xmlns="http://www.w3.org/2000/svg"><path d="M6.342.886L2.114 5.114l4.228 4.228" stroke="#7C5DFA" strokeWidth="2" fill="none" fillRule="evenodd"/></svg>
-              <span>Go back</span>
-            </button>
             <div className="status-info">
+              <button onClick={() => navigate('/')} className="go-back-button">
+                <svg width="7" height="10" xmlns="http://www.w3.org/2000/svg"><path d="M6.342.886L2.114 5.114l4.228 4.228" stroke="#7C5DFA" strokeWidth="2" fill="none" fillRule="evenodd"/></svg>
+                <span>Go back</span>
+              </button>
               <span>Status</span>
               <div className={`status-badge status-${formData.status}`}>
                 <span className="status-dot"></span>
@@ -544,8 +552,6 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
               <ItemsTable
                 isNew={false}
                 items={formData.items}
-                // serviceCharge={formData.serviceCharge} // Not needed if totals are separate
-                // taxRate={formData.taxRate}
               />
             )}
             <InvoiceTotals
@@ -554,6 +560,9 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
               taxRate={formData.taxRate}
             />
             <Notes formData={formData} isEditable={false} />
+            <div className="digital-stamp-container">
+              <img src={digitalStamp} alt="Company Stamp" className="digital-stamp" />
+            </div>
           </div>
         </div>
       ) : (

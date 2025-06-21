@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 
 const initialFormData = {
   senderName: 'BarMi Prestige Construction Ltd',
-  senderStreet: 'Office G14 Fairbourne Drive Atterbury',
+  senderStreet: 'Office G14, Fairbourne Drive, Atterbury',
   senderCity: 'Milton Keynes',
   senderPostCode: 'MK10 9RG',
   senderCountry: 'United Kingdom',
-  senderPhone: '+44 1908 040246 / +44 7864 572628',
+  senderPhone: '+44 1908 040246',
   senderEmail: 'info@barmiconstruction.co.uk',
   senderWebsite: 'www.barmiconstruction.co.uk',
   clientName: '',
@@ -14,14 +14,14 @@ const initialFormData = {
   clientStreet: '',
   clientCity: '',
   clientPostCode: '',
-  clientCountry: 'United Kingdom',
+  clientCountry: 'United Kingdom', // Default and non-editable
   clientPhone: '',
   invoiceDate: new Date().toISOString().slice(0, 10),
   paymentTerms: '30',
   projectDescription: '',
   paymentDueDate: '',
   items: [],
-  servicesDescription: '',
+  servicesDescription: '', 
   serviceCharge: 0,
   taxRate: 0.20,
   notes: "Thank you for your business!",
@@ -37,8 +37,15 @@ const calculateDueDate = (invoiceDateStr, paymentTermsStr) => {
   return date.toISOString().slice(0, 10);
 };
 
+const bankDetails = `
+Payment Details:
+Account Name: BarMi Prestige Construction Ltd
+Account No: 63468496
+Sort Code: 20-57-44`;
+
 const generateNotesWithDueDate = (dueDate, baseNote = "Thank you for your business!") => {
-  return dueDate ? `${baseNote}\nPayment is due by ${dueDate}.` : `${baseNote}\nPayment terms will apply.`;
+  const paymentLine = dueDate ? `Payment is due by ${dueDate}.` : `Payment terms will apply.`;
+  return `${baseNote}\n${paymentLine}\n${bankDetails}`;
 };
 
 export function useInvoiceForm(existingInvoice = null) {
@@ -48,7 +55,7 @@ export function useInvoiceForm(existingInvoice = null) {
   useEffect(() => {
     if (existingInvoice) {
       const dueDate = existingInvoice.paymentDueDate || calculateDueDate(existingInvoice.invoiceDate, existingInvoice.paymentTerms);
-      const notes = existingInvoice.notes || generateNotesWithDueDate(dueDate, existingInvoice.notes?.split('\n')[1] || "Thank you for your business!");
+      const notes = existingInvoice.notes || generateNotesWithDueDate(dueDate, existingInvoice.notes?.split('\n')[0] || "Thank you for your business!");
       setFormData({ ...initialFormData, ...existingInvoice, paymentDueDate: dueDate, notes });
     } else {
       const initialDueDate = calculateDueDate(initialFormData.invoiceDate, initialFormData.paymentTerms);
@@ -66,42 +73,44 @@ export function useInvoiceForm(existingInvoice = null) {
         setFormData(prev => ({ ...prev, paymentDueDate: newDueDate, notes: newNotes }));
       }
     }
-  }, [formData.invoiceDate, formData.paymentTerms, formData.notes]);
+  }, [formData.invoiceDate, formData.paymentTerms]);
+
+  const toTitleCase = (str) => str.replace(/\b\w/g, char => char.toUpperCase());
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    const titleCaseFields = ['clientName', 'clientStreet', 'clientCity', 'projectDescription'];
+    if (titleCaseFields.includes(name)) {
+      value = toTitleCase(value);
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleItemChange = (e, index) => {
     const { name, value } = e.target;
     const newItems = [...formData.items];
-    newItems[index] = {
-      ...newItems[index],
-      [name]: name === 'quantity' || name === 'price' ? parseFloat(value) || 0 : value
-    };
+    newItems[index] = { ...newItems[index], [name]: name === 'quantity' || name === 'price' ? parseFloat(value) || 0 : value };
     setFormData(prev => ({ ...prev, items: newItems }));
   };
 
   const addItem = () => setFormData(prev => ({ ...prev, items: [...prev.items, { name: '', quantity: 1, price: 0, total: 0 }] }));
-
   const deleteItem = (indexToDelete) => setFormData(prev => ({ ...prev, items: prev.items.filter((_, index) => index !== indexToDelete) }));
 
   const validateForm = () => {
     setErrorMessage('');
-    const requiredFields = {
-      senderName: "Sender's Name", senderStreet: "Sender Street Address", senderCity: "Sender City", senderPostCode: "Sender Post Code", senderCountry: "Sender Country", senderPhone: "Sender Phone", senderEmail: "Sender Email", senderWebsite: "Sender Website",
-      clientName: "Client's Name", clientEmail: "Client's Email", clientStreet: "Client Street Address", clientCity: "Client City", clientPostCode: "Client Post Code", clientCountry: "Client Country",
-      invoiceDate: "Invoice Date", paymentTerms: "Payment Terms", projectDescription: "Project Description",
-    };
-    for (const [field, MappedName] of Object.entries(requiredFields)) {
-      if (!formData[field] || String(formData[field]).trim() === '') {
-        setErrorMessage(`Please fill in the ${MappedName} field.`);
-        return false;
-      }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const ukPostcodeRegex = /^([A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}|GIR ?0A{2})$/i;
+
+    if (!formData.clientName || !formData.clientEmail || !formData.projectDescription) {
+      setErrorMessage("Please fill in all required client and project fields.");
+      return false;
     }
-    if (formData.items.some(item => !item.name || item.quantity <= 0 || item.price <= 0)) {
-      setErrorMessage("All items must have a name, and quantity/price must be greater than zero.");
+    if (!emailRegex.test(formData.clientEmail)) {
+      setErrorMessage("Please enter a valid client email address.");
+      return false;
+    }
+    if (formData.clientPostCode && !ukPostcodeRegex.test(formData.clientPostCode)) {
+      setErrorMessage("Please enter a valid UK postcode.");
       return false;
     }
     return true;
@@ -109,4 +118,3 @@ export function useInvoiceForm(existingInvoice = null) {
 
   return { formData, setFormData, errorMessage, setErrorMessage, validateForm, handleChange, handleItemChange, addItem, deleteItem };
 }
-

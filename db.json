@@ -211,9 +211,37 @@
       "notes": "Thank you for your business!\nPayment is due by 2025-07-21.",
       "status": "draft",
       "id": "BPC0625008"
+    },
+    {
+      "senderName": "BarMi Prestige Construction Ltd",
+      "senderStreet": "Office G14, Fairbourne Drive, Atterbury",
+      "senderCity": "Milton Keynes",
+      "senderPostCode": "MK10 9RG",
+      "senderCountry": "United Kingdom",
+      "senderPhone": "+44 1908 040246",
+      "senderEmail": "info@barmiconstruction.co.uk",
+      "senderWebsite": "www.barmiconstruction.co.uk",
+      "clientName": "Parablek",
+      "clientEmail": "parable4real@icloud.com",
+      "clientStreet": "Near Suncity  MH",
+      "clientCity": "Accra",
+      "clientPostCode": "bd1 9bp",
+      "clientCountry": "United Kingdom",
+      "clientPhone": "0244707163",
+      "invoiceDate": "2025-06-21",
+      "paymentTerms": "30",
+      "projectDescription": "Painting",
+      "paymentDueDate": "2025-07-21",
+      "items": [],
+      "servicesDescription": "• ",
+      "serviceCharge": 0,
+      "taxRate": 0.2,
+      "notes": "Thank you for your business!\nPayment is due by 2025-07-21.\n\nPayment Details:\nAccount Name: BarMi Prestige Construction Ltd\nAccount No: 63468496\nSort Code: 20-57-44",
+      "status": "draft",
+      "id": "BPC0625011"
     }
   ],
   "counters": {
-    "2025-06": 10
+    "2025-06": 11
   }
 }

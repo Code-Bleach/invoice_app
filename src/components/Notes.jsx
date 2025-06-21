@@ -1,4 +1,4 @@
-// import './Notes.css'; // For specific styles
+import './Notes.css'; // For specific styles
 
 function Notes({ formData, handleChange, isEditable }) {
   // Provide a default for notes if formData.notes is undefined

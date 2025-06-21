@@ -1,17 +1,27 @@
+.invoice-list-header {
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+
 .invoice-list-page {
-  /* Styles for the invoice list page */
+  
   padding: 30px 48px; /* Match general page padding */
   max-width: 730px; /* Max width for the content area of the list */
   margin: 0 auto; /* Center the list content */
+
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px); /* Adjust 80px based on your GlobalSideNav height */
 }
 
 .invoice-list-container {
   margin-top: 30px; /* Space below the header */
+  flex-grow: 1; /* Allow list to take up remaining space */
+  overflow-y: auto; /* Enable vertical scrolling for the list only */
 }
 
 .no-invoices-message {
   text-align: center;
-  margin-top: 60px; /* Adjust as needed */
+  margin-top: 60px; 
   color: #888eb0;
 }
 
@@ -19,3 +29,4 @@
   color: #0c0e16;
   margin-bottom: 16px;
 }
+    

@@ -340,28 +340,26 @@
   }
 }
 
-@media (max-width: 480px) {
-  .new-invoice-form > .actions-section.form-actions {
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-end;
-  }
-  .new-invoice-form > .actions-section.form-actions button {
-    flex-basis: calc(50% - 4px);
-    text-align: center;
-  }
-  .new-invoice-form > .actions-section.form-actions .button-discard {
-    order: 1;
-    flex-basis: 100%;
-  }
-   .new-invoice-form > .actions-section.form-actions .button-save-draft {
-    order: 2;
-  }
-  .new-invoice-form > .actions-section.form-actions .button-save-send,
-  .new-invoice-form > .actions-section.form-actions .button-save-changes {
-    order: 3;
-    flex-grow: 1;
-  }
+.invoice-view-header {
+    position: sticky;
+    top: 0;
+    background-color: var(--background-color-main); /* Match your page background */
+    z-index: 10;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.digital-stamp-container {
+    text-align: right; /* Or wherever you want to position it */
+    margin-top: 40px;
+}
+
+.digital-stamp {
+    width: 150px; /* Adjust size as needed */
+    height: auto;
 }
 
 /* ... guide message ... */
@@ -445,4 +443,29 @@
 .guide-message-modal .guide-options input[type="checkbox"] {
   margin-right: 8px;
   /* Add custom checkbox styling if desired */
+}
+
+
+@media (max-width: 480px) {
+  .new-invoice-form > .actions-section.form-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .new-invoice-form > .actions-section.form-actions button {
+    flex-basis: calc(50% - 4px);
+    text-align: center;
+  }
+  .new-invoice-form > .actions-section.form-actions .button-discard {
+    order: 1;
+    flex-basis: 100%;
+  }
+   .new-invoice-form > .actions-section.form-actions .button-save-draft {
+    order: 2;
+  }
+  .new-invoice-form > .actions-section.form-actions .button-save-send,
+  .new-invoice-form > .actions-section.form-actions .button-save-changes {
+    order: 3;
+    flex-grow: 1;
+  }
 }
