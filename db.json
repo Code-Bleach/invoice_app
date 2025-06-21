@@ -49,9 +49,34 @@
       "notes": "Thank you for your business!\nPayment is due by 2025-07-21.",
       "status": "pending",
       "id": "BPC0625002"
+    },
+    {
+      "senderStreet": "Office G14 Fairbourne Drive Atterbury",
+      "senderCity": "Milton Keynes",
+      "senderPostCode": "MK10 9RG",
+      "senderCountry": "United Kingdom",
+      "senderPhone": "+44 1908 040246",
+      "clientName": "Frimps",
+      "clientEmail": "frimps@me.com",
+      "clientStreet": "Don Bosco",
+      "clientCity": "Accra",
+      "clientPostCode": "00233",
+      "clientCountry": "Ghana",
+      "clientPhone": "0244545652",
+      "invoiceDate": "2025-06-21",
+      "paymentTerms": "30",
+      "projectDescription": "Painting",
+      "paymentDueDate": "2025-07-21",
+      "items": [],
+      "servicesDescription": "",
+      "serviceCharge": 0,
+      "taxRate": 0.2,
+      "notes": "Thank you for your business!\nPayment is due by 2025-07-21.",
+      "status": "pending",
+      "id": "BPC0625003"
     }
   ],
   "counters": {
-    "2025-06": 2
+    "2025-06": 3
   }
 }

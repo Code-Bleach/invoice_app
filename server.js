@@ -25,7 +25,7 @@ const Counter = mongoose.model('Counter', CounterSchema);
 // Helper to get the next sequence for the invoice ID
 const getNextSequenceValue = async (sequenceName) => {
   const sequenceDocument = await Counter.findByIdAndUpdate(
-    sequenceName,
+    sequenceName, 
     { $inc: { seq: 1 } },
     { new: true, upsert: true } // Create if doesn't exist
   );
