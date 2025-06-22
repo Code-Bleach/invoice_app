@@ -10,6 +10,7 @@ const LOCAL_STORAGE_KEY_THEME = 'appTheme';
 function App() {
   const [invoices, setInvoices] = useState([]);
   const [theme, setTheme] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEY_THEME) || 'light'); // 'light' or 'dark'
+  const [activeFilters, setActiveFilters] = useState([]); // e.g., ['pending', 'paid']
 
   const addInvoice = async (newInvoiceData) => {
         try {
@@ -75,11 +76,13 @@ function App() {
         setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
       };
     
-    // Effect to fetch initial invoices from the server
+    // Effect to fetch invoices from the server whenever filters change
     useEffect(() => {
     const fetchInvoices = async () => {
           try {
-            const response = await fetch('/api/invoices');
+            // Build the query string from active filters
+            const query = activeFilters.length > 0 ? `?status=${activeFilters.join(',')}` : '';
+            const response = await fetch(`/api/invoices${query}`);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             setInvoices(data);
@@ -88,7 +91,7 @@ function App() {
           }
         };
         fetchInvoices();
-      }, []); // Empty dependency array means this runs once on mount
+      }, [activeFilters]); // Re-run when filters change
     
       // Effect to save theme to localStorage whenever it changes
       useEffect(() => {
@@ -100,7 +103,13 @@ function App() {
       <GlobalSideNav currentTheme={theme} toggleTheme={toggleTheme} />
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<InvoiceListPage invoices={invoices} />} />
+          <Route 
+            path="/" 
+            element={<InvoiceListPage 
+              invoices={invoices} 
+              activeFilters={activeFilters} 
+              setActiveFilters={setActiveFilters} />} 
+          />
           <Route 
             path="/invoice/new" 
     element={<InvoiceDetailPage addInvoice={addInvoice} invoices={invoices} updateInvoice={updateInvoice} deleteInvoice={deleteInvoice} markInvoiceAsPaid={markInvoiceAsPaid} theme={theme} />}

@@ -2,87 +2,78 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './InvoiceListHeader.css'; // For specific styles
 
-function InvoiceListHeader({ invoiceCount = 0, filters, onFilterChange }) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null); // Ref for the dropdown container
-
-  const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
-
-  const handleCheckboxChange = (event) => {
-    onFilterChange(event); // Call the parent's handler
-    // setIsDropdownOpen(false); // Removed: Dropdown no longer closes on selection
-  };
+function InvoiceListHeader({ invoiceCount, activeFilters, onFilterChange }) {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterRef = useRef(null);
 
   // Effect to handle clicks outside the dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Check if the click is outside the dropdownRef and not on the filter button itself
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && !event.target.closest('.filter-button')) {
-        setIsDropdownOpen(false);
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setIsFilterOpen(false);
       }
     };
 
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isDropdownOpen]);
+  
+    }, []);
+
+  let titleText = 'No invoices';
+  if (invoiceCount > 0) {
+    titleText = `There are ${invoiceCount} total invoices`;
+    if (activeFilters.length > 0) {
+      titleText = `There are ${invoiceCount} ${activeFilters.join(' & ')} invoices`;
+    }
+  } else if (activeFilters.length > 0) {
+    titleText = `No ${activeFilters.join(' & ')} invoices found`;
+  }
 
   return (
     <header className="invoice-list-header">
-      <div>
+      <div className="header-text">
         <h1>Invoices</h1>
-        <p>There are {invoiceCount} total invoices</p>
+        <p>{titleText}</p>
       </div>
-      <div className="filter-container">
-        <button onClick={toggleDropdown} className="filter-button" aria-expanded={isDropdownOpen} aria-controls="filter-options">
-          Filter by status
-          <svg width="11" height="7" xmlns="http://www.w3.org/2000/svg" className={`arrow-icon ${isDropdownOpen ? 'open' : ''}`}><path d="M1 1l4.228 4.228L9.456 1" stroke="#7C5DFA" strokeWidth="2" fill="none" fillRule="evenodd"/></svg>
-        </button>
-        <ul id="filter-options" ref={dropdownRef} className={`filter-dropdown ${isDropdownOpen ? 'open' : ''}`} role="listbox">
+      {/* The actions are now direct children of the header to match the original CSS selectors */}
+      <div className="filter-container" ref={filterRef}>
+        <button className="filter-button" onClick={() => setIsFilterOpen(!isFilterOpen)}>
+            Filter by status
+            <svg width="11" height="7" xmlns="http://www.w3.org/2000/svg" className={`arrow-icon ${isFilterOpen ? 'open' : ''}`}>
+              <path d="M1 1l4.228 4.228L9.456 1" stroke="#7C5DFA" strokeWidth="2" fill="none" fillRule="evenodd"/>
+            </svg>
+          </button>
+          {/* This structure matches the original CSS which uses a <ul> for the dropdown */}
+        <ul id="filter-options" className={`filter-dropdown ${isFilterOpen ? 'open' : ''}`} role="listbox">
           <li>
             <label htmlFor="draft">
               <input
                 type="checkbox"
                 id="draft"
                 name="draft"
-                checked={filters.draft}
-                onChange={handleCheckboxChange}
+                checked={activeFilters.includes('draft')}
+                onChange={onFilterChange}
               />
               Draft
             </label>
           </li>
           <li>
             <label htmlFor="pending">
-              <input
-                type="checkbox"
-                id="pending"
-                name="pending"
-                checked={filters.pending}
-                onChange={handleCheckboxChange}
-              />
+              <input type="checkbox" id="pending" name="pending" checked={activeFilters.includes('pending')} onChange={onFilterChange} />
               Pending
             </label>
           </li>
           <li>
             <label htmlFor="paid">
-              <input
-                type="checkbox"
-                id="paid"
-                name="paid"
-                checked={filters.paid}
-                onChange={handleCheckboxChange}
-              />
+              <input type="checkbox" id="paid" name="paid" checked={activeFilters.includes('paid')} onChange={onFilterChange} />
               Paid
             </label>
           </li>
         </ul>
       </div>
+      {/* This structure matches the original CSS selector: .invoice-list-header > a > button */}
       <Link to="/invoice/new">
         <button>New Invoice</button>
       </Link>

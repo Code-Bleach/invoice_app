@@ -6,25 +6,65 @@ import { format } from 'date-fns';
 import mongoose from 'mongoose';
 
 // --- Database Setup ---
-// Replace with your MongoDB Atlas connection string
-const MONGO_URI = 'mongodb+srv://db_barmi_invoice_app:db@barmi_invoice.app@cluster0.ymlkqt4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const MONGO_URI = 'mongodb+srv://db_barmi_invoice_app:Bishop1255@cluster0.ymlkqt4.mongodb.net/invoice_app?retryWrites=true&w=majority&appName=Cluster0';
+
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Successfully connected to MongoDB Atlas'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Define Schemas
-const InvoiceSchema = new mongoose.Schema({}, { strict: false }); // Flexible schema
+// --- Define Schemas ---
+
+// A sub-schema for items within an invoice
+const ItemSchema = new mongoose.Schema({
+  name: String,
+  quantity: Number,
+  price: Number,
+});
+
+// A detailed and validated schema for your invoices.
+// This ensures data integrity.
+const InvoiceSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true, index: true },
+  status: { type: String, required: true, enum: ['paid', 'pending', 'draft'] },
+  senderName: String,
+  senderStreet: String,
+  senderCity: String,
+  senderPostCode: String,
+  senderCountry: String,
+  senderPhone: String,
+  senderEmail: String,
+  senderWebsite: String,
+  clientName: { type: String, required: [true, 'Client name is required'] },
+  clientEmail: { type: String, required: [true, 'Client email is required'] },
+  clientStreet: String,
+  clientCity: String,
+  clientPostCode: String,
+  clientCountry: String,
+  clientPhone: String,
+  invoiceDate: { type: Date, required: true },
+  paymentTerms: String,
+  paymentDueDate: Date,
+  projectDescription: String,
+  items: [ItemSchema],
+  servicesDescription: String,
+  serviceCharge: { type: Number, default: 0 },
+  taxRate: { type: Number, default: 0 },
+  notes: String,
+  total: Number,
+}, { timestamps: true }); // Adds createdAt and updatedAt automatically
+
 const CounterSchema = new mongoose.Schema({
   _id: { type: String, required: true }, // e.g., '2025-07'
   seq: { type: Number, default: 0 }
 });
+
 const Invoice = mongoose.model('Invoice', InvoiceSchema);
 const Counter = mongoose.model('Counter', CounterSchema);
 
 // Helper to get the next sequence for the invoice ID
 const getNextSequenceValue = async (sequenceName) => {
-  const sequenceDocument = await Counter.findByIdAndUpdate(
+    const sequenceDocument = await Counter.findByIdAndUpdate(
     sequenceName, 
     { $inc: { seq: 1 } },
     { new: true, upsert: true } // Create if doesn't exist
@@ -34,7 +74,7 @@ const getNextSequenceValue = async (sequenceName) => {
 
 
 const app = express();
-const PORT = 5001; // We'll run the backend on this port
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
@@ -43,65 +83,79 @@ app.use(express.json());
 // GET all invoices
 app.get('/api/invoices', async (req, res) => {
     try {
-        const invoices = await Invoice.find({}).sort({ invoiceDate: -1 });
+        const invoices = await Invoice.find({}).sort({ createdAt: -1 }); // Sort by creation time
         res.json(invoices);
     } catch (error) {
-        res.status(500).json({ message: 'Error reading database', error });
+        console.error("Error fetching invoices:", error);
+        res.status(500).json({ message: 'Failed to fetch invoices', error });
     }
 });
 
 // POST a new invoice
 app.post('/api/invoices', async (req, res) => {
     try {
-        const newInvoice = req.body;
-        await newInvoice.save();
-        res.status(201).json(newInvoice);
+        // The frontend sends 'invoiceNumber'. We map it to 'id' for our schema.
+        const invoiceData = { ...req.body, id: req.body.invoiceNumber };
+        delete invoiceData.invoiceNumber; // Clean up the object
+
+        // Create a new Mongoose document instance before saving
+        const invoiceToSave = new Invoice(invoiceData);
+        const savedInvoice = await invoiceToSave.save();
+        
+        res.status(201).json(savedInvoice);
     } catch (error) {
-        res.status(500).json({ message: 'Error writing to database', error });
+        console.error("Error creating invoice:", error);
+        // Provide a more specific error for duplicate IDs
+        if (error.code === 11000) {
+             return res.status(409).json({ message: 'Conflict: An invoice with this ID already exists.', error });
+        }
+        res.status(500).json({ message: 'Failed to create invoice', error });
     }
 });
 
 // PUT (update) an invoice
-app.put('/api/invoices/:invoiceId', async (req, res) => {
+// PUT (update) an invoice
+app.put('/api/invoices/:id', async (req, res) => {
     try {
-        const { invoiceId } = req.params;
+        const { id } = req.params;
         const updatedInvoiceData = req.body;
-        // Use findOneAndUpdate to find by the 'id' field and update
+        
         const updatedInvoice = await Invoice.findOneAndUpdate(
-            { id: invoiceId }, 
+            { id: id }, // Find document by our custom 'id' field
             updatedInvoiceData, 
-            { new: true } // Return the updated document
+            { new: true, runValidators: true } // Return the updated doc and run schema validators
         );
 
         if (!updatedInvoice) {
             return res.status(404).json({ message: 'Invoice not found' });
         }
-
         res.json(updatedInvoice);
     } catch (error) {
-        res.status(500).json({ message: 'Error updating database', error });
+        console.error("Error updating invoice:", error);
+        res.status(500).json({ message: 'Failed to update invoice', error });
     }
 });
 
 // DELETE an invoice
-app.delete('/api/invoices/:invoiceId', async (req, res) => {
-    try {
-        const { invoiceId } = req.params;
-        const result = await Invoice.deleteOne({ id: invoiceId });
+app.delete('/api/invoices/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+        const result = await Invoice.deleteOne({ id: id }); // Find by custom 'id'
 
         if (result.deletedCount === 0) {
             return res.status(404).json({ message: 'Invoice not found' });
         }
-
         res.status(204).send(); // No Content
     } catch (error) {
-        res.status(500).json({ message: 'Error deleting from database', error });
+        console.error("Error deleting invoice:", error);
+        res.status(500).json({ message: 'Failed to delete invoice', error });
     }
+
 });
 
 // POST to generate a new invoice ID
 app.post('/api/generate-id', async (req, res) => {
-    try {
+       try {
         const now = new Date();
         const month = format(now, 'MM');
         const year = format(now, 'yy');
@@ -113,8 +167,10 @@ app.post('/api/generate-id', async (req, res) => {
 
         res.json({ id: newId });
     } catch (error) {
-        res.status(500).json({ message: 'Error generating ID', error });
+        console.error("Error generating ID:", error);
+        res.status(500).json({ message: 'Failed to generate ID', error });
     }
+
 });
 
 

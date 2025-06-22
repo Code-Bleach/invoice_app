@@ -142,12 +142,15 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
       // If the intention IS to "Save a Copy as Draft", this logic would be different.
     }
 
-    const newId = await generateNewInvoiceId();
-    const draftInvoiceData = { ...formData, status: 'draft', id: newId };
+    const newInvoiceNum = await generateNewInvoiceId();
+    // The property name must match the backend schema ('invoiceNumber')
+    const draftInvoiceData = { ...formData, status: 'draft', invoiceNumber: newInvoiceNum };
+    // Remove the 'id' property from the new object if it exists from formData
+    delete draftInvoiceData.id;
     const newDraft = await addInvoice(draftInvoiceData); // addInvoice from App.jsx
 
-    if (newDraft && newDraft.id) {
-      closeFormAndNavigate(`/invoice/${newDraft.id}`);
+    if (newDraft && newDraft.id) { // Check for 'id' which comes from db.json
+      closeFormAndNavigate(`/invoice/${newDraft.id}`); // Use the virtual 'id' for navigation
     } else {
       console.error("Failed to save draft: addInvoice did not return the expected new draft object with an ID.");
       setErrorMessage("There was an error saving the draft. Please try again.");
@@ -255,21 +258,21 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
   // This function now handles saving/updating the invoice to 'pending' status
   // It's called by handleEmailInvoice and handleShareInvoice
   const finalizeAndSaveAsPending = async (invoiceDataToSave) => { // Mark as async
-     const finalInvoice = {
-      ...invoiceDataToSave,
-      status: 'pending',
-      // Only generate a new ID if one doesn't exist (for new invoices from the modal)
-      id: invoiceDataToSave.id || await generateNewInvoiceId() // Await the async ID generation
-    };
+     let finalInvoiceData;
+
     // Check if this is a new invoice being saved for the first time as pending
     if (!invoiceDataToSave.id) { // This implies it came from the new invoice form via modal
-      const newlyAddedInvoice = await addInvoice(finalInvoice);
+      const newInvoiceNum = await generateNewInvoiceId();
+      finalInvoiceData = { ...invoiceDataToSave, status: 'pending', invoiceNumber: newInvoiceNum };
+      delete finalInvoiceData.id; // Remove null/undefined id before sending
+      const newlyAddedInvoice = await addInvoice(finalInvoiceData);
       setFormData(newlyAddedInvoice); // Update local state with the full new invoice
       return newlyAddedInvoice;
     } else { // It was an existing draft
-      await updateInvoice(finalInvoice);
-      setFormData(finalInvoice); // Update local state
-      return finalInvoice;
+      finalInvoiceData = { ...invoiceDataToSave, status: 'pending' };
+      await updateInvoice(finalInvoiceData);
+      setFormData(finalInvoiceData); // Update local state
+      return finalInvoiceData;
     }
   };
 
@@ -343,10 +346,13 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     // This is called when the modal's "Close" button is clicked.
     // If invoiceForSendOptions has no ID, it means it was from the "Save & Send" of a new invoice.
     // In this case, save as draft and navigate.
-    if (invoiceForSendOptions && !invoiceForSendOptions.id && isNew) {
-     const draftInvoice = { ...invoiceForSendOptions, status: 'draft', id: await generateNewInvoiceId() }; // Await ID generation
-     const newDraft = await addInvoice(draftInvoice);
-      setIsSendOptionsModalOpen(false); // Close the modal
+    if (invoiceForSendOptions && !invoiceForSendOptions.id && isNew) { // This is a new invoice
+      const newInvoiceNum = await generateNewInvoiceId();
+      const draftInvoiceData = { ...invoiceForSendOptions, status: 'draft', invoiceNumber: newInvoiceNum };
+      delete draftInvoiceData.id;
+
+      const newDraft = await addInvoice(draftInvoiceData);
+        setIsSendOptionsModalOpen(false); // Close the modal
       closeFormAndNavigate(`/invoice/${newDraft.id}`); // Navigate to view the new draft
     } else {
       setIsSendOptionsModalOpen(false); // Just close if it was an existing invoice or an action was already taken
