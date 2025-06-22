@@ -543,14 +543,14 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
           <div className="invoice-view-body" ref={invoiceViewRef}>
             <div className="invoice-view-logo-header">
               <img src={theme === 'light' ? barmilogoDark : barmilogoLight} alt="Barmi Construction Logo" className="invoice-document-logo" />
+            <CompanyDetails isNew={false} formData={formData} />
             </div>
             <div className="invoice-main-info">
               <div className="id-description">
                 <h1><span style={{color: '#7E88C3'}}>Invoice#: </span>{formData.id}</h1>
                 <p>{formData.projectDescription}</p>
               </div>
-              <CompanyDetails isNew={false} formData={formData} />
-            </div>
+                   </div>
             <InvoiceInfo isNew={false} formData={formData} />
             <ServicesSection isNew={false} formData={formData} />
 

@@ -38,21 +38,22 @@ const InvoiceSchema = new mongoose.Schema({
   clientName: { type: String, required: [true, 'Client name is required'] },
   clientEmail: { type: String, required: [true, 'Client email is required'] },
   clientStreet: String,
-  clientCity: String,
-  clientPostCode: String,
-  clientCountry: String,
-  clientPhone: String,
+  clientCity: { type: String, required: [true, 'Client city is required'] },
+  clientPostCode: { type: String, required: [true, 'Client postcode is required'] },
+  clientCountry: { type: String, required: [true, 'Client country is required'] },
+  clientPhone: { type: Number, required: [true, 'Client phone is required'] },
   invoiceDate: { type: Date, required: true },
   paymentTerms: String,
   paymentDueDate: Date,
   projectDescription: String,
   items: [ItemSchema],
   servicesDescription: String,
-  serviceCharge: { type: Number, default: 0 },
-  taxRate: { type: Number, default: 0 },
+  serviceCharge: { type: Number, required: [true, 'Service Charge is required'], default: 0 }, // Make required
+  taxRate: { type: Number, default: 0.2 },
   notes: String,
   total: Number,
-}, { timestamps: true }); // Adds createdAt and updatedAt automatically
+}); 
+// { timestamps: true }); // Adds createdAt and updatedAt automatically
 
 const CounterSchema = new mongoose.Schema({
   _id: { type: String, required: true }, // e.g., '2025-07'
