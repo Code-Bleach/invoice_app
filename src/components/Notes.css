@@ -1,11 +1,16 @@
 /* Notes.css */
 
-/* Styles for the display mode (when isEditable is false) */
+/* Styles for the display mode */
 .notes-section:not(.form-section) { /* Target only view mode */
   margin-top: 30px; /* Space above the notes section */
   padding: 24px; /* Padding consistent with other view sections */
   background-color: var(--color-invoice-item-bg, #F9FAFE); /* Light background like item list footer */
   border-radius: 0 0 8px 8px; /* Rounded bottom corners */
+}
+
+.notes-display{
+  color: #7E88C3;
+  font-size: 13px;
 }
 
 .theme-dark .notes-section:not(.form-section) {

@@ -221,7 +221,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     try {
       const canvas = await html2canvas(inputElement, {
         scale: 2, useCORS: true, backgroundColor: '#ffffff',
-        windowHeight: inputElement.scrollHeight, scrollY: -window.scrollY
+        windowHeight: inputElement.scrollHeight, scrollY: -window.scrollY // Ensure background is white for PDF
       });
       const imgData = canvas.toDataURL('image/png');
       const imgWidth = 210; // A4 width in mm
@@ -232,15 +232,52 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
       const pdf = new jsPDF('p', 'mm', 'a4');
       let position = 0;
 
+      // Define footer elements for PDF
+      const stampImg = new Image(); // Create a new Image object
+      stampImg.src = digitalStamp; // Set its source
+
+      // Dimensions and positions for the footer elements on the PDF page (in mm)
+      const footerHeight = 25; // Total height reserved for footer
+      const footerPadding = 10; // Padding from left/right/bottom edges
+      const stampSize = 20; // Size of the stamp image
+      const stampX = footerPadding;
+      const stampY = pageHeight - footerHeight + (footerHeight - stampSize) / 2; // Vertically center stamp in footer area
+
+      const contactFontSize = 8; // pt
+      const contactTextColor = '#888888'; // A subtle grey color
+      const contactX = stampX + stampSize + footerPadding; // To the right of the stamp
+      const contactY = pageHeight - footerHeight + footerHeight / 2 + 2; // Vertically center text in footer area
+
+      const footerText = `${invoice.senderEmail || ''} | ${invoice.senderWebsite || ''}`;
+
+      // Ensure image is loaded before adding to PDF
+      await new Promise((resolve, reject) => {
+        stampImg.onload = resolve;
+        stampImg.onerror = reject;
+        if (stampImg.complete) resolve(); // If already loaded
+      });
+      
+      // Function to add footer to a page
+      const addFooterToPage = () => {
+        pdf.addImage(stampImg, 'PNG', stampX, stampY, stampSize, stampSize);
+        pdf.setFontSize(contactFontSize);
+        pdf.setTextColor(contactTextColor);
+        pdf.text(footerText, contactX, contactY, { align: 'left' });
+      };
+
+      // Add first page content and footer
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
+      addFooterToPage(); // Add footer to first page
 
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
+      addFooterToPage(); // Add footer to subsequent pages
       }
+
       
       if (forSharing) {
         const pdfBlob = pdf.output('blob');
@@ -250,7 +287,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
         return true;
       }
     } catch (error) {
-      console.error("Error generating PDF:", error);
+       console.error("Error generating PDF:", error); // Log the actual error
       return null;
     }
   };
@@ -486,6 +523,9 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
                     value={formData.taxRate}
                     onChange={handleChange}
                     step="0.01" min="0" max="1" />
+                    {formData.taxRate !== null && formData.taxRate !== undefined && (
+                    <p className='current-tax'>Current Tax: { (formData.taxRate * 100).toFixed(0) }%</p>
+                  )}
                 </div>
               </section>
             )}
@@ -540,7 +580,7 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
             </div>
           </div>
 
-          <div className="invoice-view-body" ref={invoiceViewRef}>
+          <div className="invoice-view-body-content" ref={invoiceViewRef}> {/* Ref now points to content excluding footer */}
             <div className="invoice-view-logo-header">
               <img src={theme === 'light' ? barmilogoDark : barmilogoLight} alt="Barmi Construction Logo" className="invoice-document-logo" />
             <CompanyDetails isNew={false} formData={formData} />
@@ -565,12 +605,16 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
               serviceCharge={formData.serviceCharge}
               taxRate={formData.taxRate}
             />
-            <Notes formData={formData} isEditable={false} />
-            <div className="digital-stamp-container">
+            <Notes formData={formData} />            
+          </div> {/* End of invoice-view-body-content */}
+          
+          {/* Digital stamp and contact info for display on screen */}
+          {/* This container is outside the ref for html2canvas, but still part of the visible invoice */}
+          <div className="digital-stamp-container">
               <img src={digitalStamp} alt="Company Stamp" className="digital-stamp" />
+            <p className="footer-contact-info">{formData.senderEmail} | {formData.senderWebsite}</p>
             </div>
           </div>
-        </div>
       ) : (
         <div>Loading invoice or invoice not found...</div> // Fallback for loading state or error
       )}

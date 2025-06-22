@@ -35,9 +35,11 @@
   font-weight: bold;
   color: var(--color-text-primary, #0C0E16);
   line-height: 1.33; /* 20px */
+  text-transform: capitalize;
 }
 
-.client-name {
+#clientName, #clientStreet {
+  text-transform: capitalize;
   /* Already covered by .meta-value, can be more specific if needed */
 }
 

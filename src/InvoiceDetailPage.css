@@ -133,12 +133,17 @@
 
 /* --- Invoice View Mode --- */
 .invoice-view-container {
-  max-width: 730px;
-  margin: 30px auto;
-  padding: 0 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+   background-color: var(--color-bg-secondary);
+    padding: 48px; /* Padding around the entire invoice content */
+    border-radius: 8px;
+    box-shadow: var(--shadow-card);
+    max-width: 730px; /* Max width for invoice content */
+    margin: 0 auto; /* Center the invoice card */
+    margin-bottom: 40px; /* Space below the invoice card */
+}
+/* This div holds the main content that html2canvas will capture */
+.invoice-view-body-content {
+    /* No specific styles needed here, just a wrapper */
 }
 
 .go-back-button {
@@ -265,6 +270,8 @@
   font-size: 12px;
   color: var(--color-text-secondary, #7E88C3);
   line-height: 1.5;
+  text-transform: upperCase;
+  font-weight: bold;
 }
 .theme-dark .id-description h1 {
   color: var(--color-text-primary-dark, #FFFFFF);
@@ -350,14 +357,60 @@
     align-items: center;
 }
 
+/* Digital Stamp and Contact Info for ON-SCREEN display */
 .digital-stamp-container {
+  display: flex;
     text-align: right; /* Or wherever you want to position it */
     margin-top: 40px;
 }
 
 .digital-stamp {
-    width: 150px; /* Adjust size as needed */
+    width: 100px; /* Adjust size as needed */
     height: auto;
+    margin-bottom: 10px;
+}
+.footer-contact-info {
+    font-size: 12px;
+    color: var(--color-text-secondary); /* Muted color */
+    margin: 2px 0;
+}
+
+/* Styles for the PDF generation (print media) */
+/* These styles ensure the PDF output looks clean */
+@media print {
+    body {
+        background-color: #fff !important; /* Ensure white background for print */
+    }
+    .invoice-detail-page {
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+    .invoice-view-header,
+    .actions-container,
+    .modal-overlay,
+    .guide-message-overlay,
+    .main-footer, /* Ensure the main app footer is hidden */
+    .go-back-button {
+        display: none !important; /* Hide UI elements not needed in print */
+    }
+    /* Ensure the main content takes full width */
+    .invoice-view-container {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+    /* Ensure the content captured by html2canvas is not affected by other elements */
+    .invoice-view-body-content {
+        padding: 48px; /* Re-apply padding if needed for the captured content */
+    }
+    /* Hide the on-screen digital stamp container during print, as it's manually added to PDF */
+    .digital-stamp-container {
+        display: none !important;
+    }
 }
 
 /* ... guide message ... */
@@ -444,7 +497,7 @@
 }
 
 
-@media (max-width: 480px) {
+/* @media (max-width: 480px) {
   .new-invoice-form > .actions-section.form-actions {
     flex-wrap: wrap;
     gap: 8px;
@@ -466,4 +519,4 @@
     order: 3;
     flex-grow: 1;
   }
-}
+} */

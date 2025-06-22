@@ -31,7 +31,7 @@ const initialFormData = {
   items: [{ name: '', quantity: 0, price: 0 }],
   servicesDescription: '',
   serviceCharge: 0, // Default to 0, but will be required
-  taxRate: 0,
+  taxRate: 0.2,
   notes: 'Bank Details:\nAccount Name: BarMi Construction Ltd\nAccount No: 12345678\nSort Code: 12-34-56', // Default notes with bank details
   total: 0, // Calculated
 };
@@ -130,21 +130,27 @@ export const useInvoiceForm = (existingInvoice) => {
     // Client details validation
     if (!formData.clientName) errors.push("Client's Name is required.");
     if (!formData.clientEmail) errors.push("Client's Email is required.");
-    if (formData.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.clientEmail)) {
+    if (!formData.clientEmail && !formData.clientPhone) {
+        errors.push("Client's Email or Phone is required.");
+      } else if (formData.clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.clientEmail)) { // If email is provided, it must be valid.
       errors.push("Client's Email is not valid.");
+    } else if (formData.clientPhone && !/^[+\d\s()-]{10,}$/.test(formData.clientPhone)) {
+      // If phone is provided, it must be a valid format (at least 7 digits/allowed chars)
+      errors.push("Client's Phone number is not valid.");
     }
     if (!formData.invoiceDate) errors.push("Invoice Date is required.");
     if (!formData.paymentTerms) errors.push("Payment Terms are required.");
     if (!formData.projectDescription) errors.push("Project Description is required.");
-    if (formData.items.length === 0) {
-      errors.push("At least one item is required.");
-    } else {
-      formData.items.forEach((item, index) => {
+    
+    // Items list is optional. Validate individual items only if they have some data.
+    formData.items.forEach((item, index) => {
+      // Only validate if the item has a name or non-zero quantity/price
+      if (item.name || item.quantity > 0 || item.price > 0) {
         if (!item.name) errors.push(`Item ${index + 1}: Name is required.`);
-        if (item.quantity <= 0) errors.push(`Item ${index + 1}: Quantity must be greater than 0.`);
-        if (item.price <= 0) errors.push(`Item ${index + 1}: Price must be greater than 0.`);
-      });
-    }
+        if (item.quantity < 0) errors.push(`Item ${index + 1}: Quantity cannot be negative.`);
+        if (item.price < 0) errors.push(`Item ${index + 1}: Price cannot be negative.`);
+      }
+    });
 
     // Service Charge validation (now mandatory)
     if (formData.serviceCharge === null || formData.serviceCharge === undefined || formData.serviceCharge < 0) {

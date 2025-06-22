@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import InvoiceListPage from './InvoiceListPage';
-import InvoiceDetailPage from './InvoiceDetailPage'; // Assuming this is the correct detail page
-import GlobalSideNav from './components/GlobalSideNav'; // Import the new component
+import InvoiceDetailPage from './InvoiceDetailPage';
+import GlobalSideNav from './components/GlobalSideNav';
 import './AppLayout.css'; // CSS for the overall app layout
 
 const LOCAL_STORAGE_KEY_THEME = 'appTheme';
@@ -12,6 +12,21 @@ function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem(LOCAL_STORAGE_KEY_THEME) || 'light'); // 'light' or 'dark'
   const [activeFilters, setActiveFilters] = useState([]); // e.g., ['pending', 'paid']
 
+  // Centralized function to fetch invoices based on current filters
+  const fetchInvoices = async () => {
+    try {
+      // Build the query string from active filters
+      const query = activeFilters.length > 0 ? `?status=${activeFilters.join(',')}` : '';
+      const response = await fetch(`/api/invoices${query}`);
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+      setInvoices(data);
+    } catch (error) {
+      console.error("Failed to fetch invoices:", error);
+      setInvoices([]); // Set to empty array on error to avoid crashes
+    }
+  };
+
   const addInvoice = async (newInvoiceData) => {
         try {
           const response = await fetch('/api/invoices', {
@@ -20,11 +35,13 @@ function App() {
             body: JSON.stringify(newInvoiceData),
           });
           if (!response.ok) throw new Error('Failed to add invoice');
+          
           const addedInvoice = await response.json();
-          // Add to the top of the list for immediate UI update
-          setInvoices(prevInvoices => [addedInvoice, ...prevInvoices]);
+          // Reset filters and refetch all invoices to show the new one at the top
+          setActiveFilters([]);
           console.log("New invoice added with ID:", addedInvoice.id);
           return addedInvoice;
+          
         } catch (error) {
           console.error("Error adding invoice:", error);
           return null;
@@ -40,9 +57,9 @@ function App() {
           });
           if (!response.ok) throw new Error('Failed to update invoice');
           const updatedInvoice = await response.json();
-          setInvoices(prevInvoices =>
-            prevInvoices.map(inv => (inv.id === updatedInvoice.id ? updatedInvoice : inv))
-          );
+          // Refetch to ensure the list is correctly filtered and sorted
+          await fetchInvoices();
+
           console.log("Invoice updated:", updatedInvoice);
         } catch (error) {
           console.error("Error updating invoice:", error);
@@ -55,9 +72,8 @@ function App() {
             method: 'DELETE',
           });
           if (!response.ok) throw new Error('Failed to delete invoice');
-          setInvoices(prevInvoices =>
-            prevInvoices.filter(inv => inv.id !== invoiceIdToDelete)
-          );
+          // Refetch to update the list
+          await fetchInvoices();
           console.log("Invoice deleted:", invoiceIdToDelete);
         } catch (error) {
           console.error("Error deleting invoice:", error);
@@ -78,19 +94,7 @@ function App() {
     
     // Effect to fetch invoices from the server whenever filters change
     useEffect(() => {
-    const fetchInvoices = async () => {
-          try {
-            // Build the query string from active filters
-            const query = activeFilters.length > 0 ? `?status=${activeFilters.join(',')}` : '';
-            const response = await fetch(`/api/invoices${query}`);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
-            setInvoices(data);
-          } catch (error) {
-            console.error("Failed to fetch invoices:", error);
-          }
-        };
-        fetchInvoices();
+    fetchInvoices();
       }, [activeFilters]); // Re-run when filters change
     
       // Effect to save theme to localStorage whenever it changes
@@ -118,8 +122,8 @@ function App() {
             path="/invoice/:invoiceId" 
     element={<InvoiceDetailPage invoices={invoices} addInvoice={addInvoice} updateInvoice={updateInvoice} deleteInvoice={deleteInvoice} markInvoiceAsPaid={markInvoiceAsPaid} theme={theme} />}
           />
-        </Routes> 
-      </main>
+        </Routes>
+        </main>
     </div>
   );
 }
