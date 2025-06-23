@@ -359,15 +359,19 @@
 
 /* Digital Stamp and Contact Info for ON-SCREEN display */
 .digital-stamp-container {
-  display: flex;
-    text-align: right; /* Or wherever you want to position it */
-    margin-top: 40px;
+    margin-top: 2rem;
+    padding: 1rem;
+    text-align: right;
+    display:inline;
 }
 
 .digital-stamp {
     width: 100px; /* Adjust size as needed */
     height: auto;
     margin-bottom: 10px;
+    position:absolute;
+    left: 62.5%;
+    bottom: 11%;
 }
 .footer-contact-info {
     font-size: 12px;

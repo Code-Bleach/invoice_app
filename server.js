@@ -84,12 +84,20 @@ app.use(express.json());
 // GET all invoices
 app.get('/api/invoices', async (req, res) => {
     try {
-        const invoices = await Invoice.find({}).sort({ createdAt: -1 }); // Sort by creation time
-        res.json(invoices);
-    } catch (error) {
-        console.error("Error fetching invoices:", error);
-        res.status(500).json({ message: 'Failed to fetch invoices', error });
+            let query = {};
+            const { status } = req.query;
+
+           if (status && status.length > 0) {
+            const statusArray = Array.isArray(status) ? status : [status];
+            query.status = { $in: statusArray };
     }
+
+            const invoices = await Invoice.find(query).sort({ createdAt: -1 });
+            res.json(invoices);
+        }catch (error) {
+            console.error("Error fetching invoices:", error);
+            res.status(500).json({ message: 'Failed to fetch invoices', error });
+            }
 });
 
 // POST a new invoice
@@ -114,7 +122,6 @@ app.post('/api/invoices', async (req, res) => {
     }
 });
 
-// PUT (update) an invoice
 // PUT (update) an invoice
 app.put('/api/invoices/:id', async (req, res) => {
     try {
