@@ -4,13 +4,13 @@ import { format } from 'date-fns';
 // Default company details
 const DEFAULT_SENDER_DETAILS = {
   senderName: 'BarMi Prestige Construction Ltd',
-  senderStreet: '19 Union Terrace',
-  senderCity: 'London',
-  senderPostCode: 'E1 3EZ',
+  senderStreet: 'G14 Fairbourne Drive Atterbury',
+  senderCity: 'Milton Keynes',
+  senderPostCode: 'MK10 9RG',
   senderCountry: 'United Kingdom',
   senderPhone: '+44 7864 572628 /+44 1908 040246',
   senderEmail: 'info@barmiconstruction.co.uk',
-  senderWebsite: 'barmiconstruction.co.uk',
+  senderWebsite: 'www.barmiconstruction.co.uk',
 };
 
 const initialFormData = {
@@ -28,11 +28,11 @@ const initialFormData = {
   paymentTerms: 'Net 30 Days', // Default payment terms
   paymentDueDate: '', // Will be calculated
   projectDescription: '',
-  items: [{ name: '', quantity: 0, price: 0 }],
+  items: [],
   servicesDescription: '',
   serviceCharge: 0, // Default to 0, but will be required
   taxRate: 0.2,
-  notes: 'Bank Details:\nAccount Name: BarMi Construction Ltd\nAccount No: 12345678\nSort Code: 12-34-56', // Default notes with bank details
+  notes: 'Bank Details\nAccount Name: BarMi Construction Ltd\nAccount No: 63468496\nSort Code: 20-57-44\n\nThank you for choosing us!', // Default notes with bank details
   total: 0, // Calculated
 };
 
@@ -142,13 +142,20 @@ export const useInvoiceForm = (existingInvoice) => {
     if (!formData.paymentTerms) errors.push("Payment Terms are required.");
     if (!formData.projectDescription) errors.push("Project Description is required.");
     
-    // Items list is optional. Validate individual items only if they have some data.
+    // Validate every item in the list if items exist
     formData.items.forEach((item, index) => {
-      // Only validate if the item has a name or non-zero quantity/price
-      if (item.name || item.quantity > 0 || item.price > 0) {
-        if (!item.name) errors.push(`Item ${index + 1}: Name is required.`);
-        if (item.quantity < 0) errors.push(`Item ${index + 1}: Quantity cannot be negative.`);
-        if (item.price < 0) errors.push(`Item ${index + 1}: Price cannot be negative.`);
+      const itemName = item.name ? item.name.trim() : '';
+      const itemQuantity = Number(item.quantity);
+      const itemPrice = Number(item.price);
+
+      if (!itemName) {
+        errors.push(`Item ${index + 1}: Name is required.`);
+      }
+      if (isNaN(itemQuantity) || itemQuantity < 0) {
+        errors.push(`Item ${index + 1}: Quantity must be a non-negative number.`);
+      }
+      if (isNaN(itemPrice) || itemPrice < 0) {
+        errors.push(`Item ${index + 1}: Price must be a non-negative number.`);
       }
     });
 

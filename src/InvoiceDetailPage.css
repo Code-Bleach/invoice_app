@@ -134,7 +134,7 @@
 /* --- Invoice View Mode --- */
 .invoice-view-container {
    background-color: var(--color-bg-secondary);
-    padding: 48px; /* Padding around the entire invoice content */
+    /* padding: 48px; /* Moved to .invoice-view-body-content */
     border-radius: 8px;
     box-shadow: var(--shadow-card);
     max-width: 730px; /* Max width for invoice content */
@@ -143,6 +143,7 @@
 }
 /* This div holds the main content that html2canvas will capture */
 .invoice-view-body-content {
+    padding: 48px; /* Added padding here for PDF capture */
     /* No specific styles needed here, just a wrapper */
 }
 
@@ -360,23 +361,27 @@
 /* Digital Stamp and Contact Info for ON-SCREEN display */
 .digital-stamp-container {
     margin-top: 2rem;
-    padding: 1rem;
-    text-align: right;
-    display:inline;
+  padding: 1rem;
+  text-align: right;
+  display: block; /* Ensure it's a block element */
 }
 
 .digital-stamp {
     width: 100px; /* Adjust size as needed */
-    height: auto;
-    margin-bottom: 10px;
-    position:absolute;
-    left: 62.5%;
-    bottom: 11%;
+  height: auto;
+  margin-bottom: 10px;
+  /* Removed absolute positioning */
+  display: inline-block; /* Allows it to sit next to text */
+  vertical-align: middle; /* Aligns with text */
 }
+
 .footer-contact-info {
     font-size: 12px;
-    color: var(--color-text-secondary); /* Muted color */
-    margin: 2px 0;
+  color: var(--color-text-secondary); /* Muted color */
+  /* Removed margin: auto 0; */
+  display: inline-block; /* Allows it to sit next to stamp */
+  vertical-align: middle; /* Aligns with stamp */
+  margin-left: 10px; /* Space between stamp and text */
 }
 
 /* Styles for the PDF generation (print media) */

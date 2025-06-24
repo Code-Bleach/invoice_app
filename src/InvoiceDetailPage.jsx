@@ -212,7 +212,6 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     await markInvoiceAsPaid(formData.id);
     setFormData(prev => ({ ...prev, status: 'paid'}));
   };
-
   const generatePDF = async (invoice, inputElement, forSharing = false) => {
     if (!inputElement) {
       console.error("PDF generation error: Input element for html2canvas not found.");
@@ -220,74 +219,86 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
     }
     try {
       const canvas = await html2canvas(inputElement, {
-        scale: 2, useCORS: true, backgroundColor: '#ffffff',
-        windowHeight: inputElement.scrollHeight, scrollY: -window.scrollY // Ensure background is white for PDF
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        windowHeight: inputElement.scrollHeight,
+        scrollY: -window.scrollY
       });
       const imgData = canvas.toDataURL('image/png');
       const imgWidth = 210; // A4 width in mm
       const pageHeight = 295; // A4 height in mm
       const imgHeight = canvas.height * imgWidth / canvas.width;
       let heightLeft = imgHeight;
-
+  
       const pdf = new jsPDF('p', 'mm', 'a4');
       let position = 0;
-
-      // Define footer elements for PDF
-      const stampImg = new Image(); // Create a new Image object
-      stampImg.src = digitalStamp; // Set its source
-
-      // Dimensions and positions for the footer elements on the PDF page (in mm)
-      const footerHeight = 25; // Total height reserved for footer
-      const footerPadding = 10; // Padding from left/right/bottom edges
-      const stampSize = 20; // Size of the stamp image
-      const stampX = footerPadding;
-      const stampY = pageHeight - footerHeight + (footerHeight - stampSize) / 2; // Vertically center stamp in footer area
-
-      const contactFontSize = 8; // pt
-      const contactTextColor = '#888888'; // A subtle grey color
-      const contactX = stampX + stampSize + footerPadding; // To the right of the stamp
-      const contactY = pageHeight - footerHeight + footerHeight / 2 + 2; // Vertically center text in footer area
-
-      const footerText = `${invoice.senderEmail || ''} | ${invoice.senderWebsite || ''}`;
-
+  
+      // --- Footer Setup ---
+      const stampImg = new Image();
+      stampImg.src = digitalStamp;
+  
       // Ensure image is loaded before adding to PDF
       await new Promise((resolve, reject) => {
         stampImg.onload = resolve;
         stampImg.onerror = reject;
-        if (stampImg.complete) resolve(); // If already loaded
+        if (stampImg.complete) resolve();
       });
-      
-      // Function to add footer to a page
+  
+      // Function to add styled footer to each page
       const addFooterToPage = () => {
-        pdf.addImage(stampImg, 'PNG', stampX, stampY, stampSize, stampSize);
+        const footerTopY = pageHeight - 20; // Start footer 30mm from bottom
+        const footerPadding = 10; // 10mm padding from left/right edges
+        const contentPadding = 5; // 5mm internal padding
+  
+        // --- NO DASHED BORDER - Removed pdf.setLineDashPattern and pdf.rect ---
+  
+        // --- Prepare Content ---
+        const stampSize = 25; // Increased size to match UI's 100px (approx 25mm)
+        const contactFontSize = 8;
+        const contactTextColor = '#888888';
+        const footerText = `${invoice.senderEmail || ''} | ${invoice.senderWebsite || ''}`;
+  
         pdf.setFontSize(contactFontSize);
+        const textWidth = pdf.getTextWidth(footerText);
+  
+        // --- Position Content (Right Aligned) ---
+        const containerRightEdge = imgWidth - footerPadding - contentPadding;
+        const textX = containerRightEdge - textWidth;
+        const stampX = textX - contentPadding - stampSize;
+        const contentY = footerTopY + (20 / 2); // Mid-point of the container's height
+        const stampY = contentY - (stampSize / 2);
+        const textY = contentY + (contactFontSize * 0.35 / 2); // Adjust for text baseline
+  
+        // --- Draw Content ---
+        pdf.addImage(stampImg, 'PNG', stampX, stampY, stampSize, stampSize);
         pdf.setTextColor(contactTextColor);
-        pdf.text(footerText, contactX, contactY, { align: 'left' });
+        pdf.text(footerText, textX, textY);
       };
-
+  
       // Add first page content and footer
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-      addFooterToPage(); // Add footer to first page
-
+      addFooterToPage();
+  
+      // Add subsequent pages if content overflows
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
-      addFooterToPage(); // Add footer to subsequent pages
+        addFooterToPage();
       }
-
-      
+  
       if (forSharing) {
         const pdfBlob = pdf.output('blob');
         return new File([pdfBlob], `invoice-${invoice.id || 'new'}.pdf`, { type: 'application/pdf' });
       } else {
-        pdf.save(`invoice-${invoice.id || 'new'}.pdf`); // This is standard
+        pdf.save(`invoice-${invoice.id || 'new'}.pdf`);
         return true;
       }
     } catch (error) {
-       console.error("Error generating PDF:", error); // Log the actual error
+      console.error("Error generating PDF:", error);
       return null;
     }
   };
