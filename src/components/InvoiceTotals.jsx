@@ -14,6 +14,15 @@ function InvoiceTotals({ items, serviceCharge = 0, taxRate = 0, isTableView = fa
   const taxAmount = subtotal * currentTaxRate;
   const total = subtotal + taxAmount;
 
+  // Helper to format numbers with commas and two decimal places
+  const formatNumberWithCommas = (num) => {
+    // Using 'en-GB' locale for UK-style formatting (e.g., 1,234.56)
+    return new Intl.NumberFormat('en-GB', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(num);
+  };
+
   if (isTableView) {
     // Render Subtotal, Tax (if applicable), and Grand Total as table rows
     return (
@@ -21,19 +30,19 @@ function InvoiceTotals({ items, serviceCharge = 0, taxRate = 0, isTableView = fa
         <tr>
           <td colSpan="2"></td> {/* Empty cells for alignment */}
           <td className="summary-label">Subtotal</td>
-          <td className="summary-value">&pound;{subtotal.toFixed(2)}</td>
+          <td className="summary-value">&pound;{formatNumberWithCommas(subtotal)}</td>
         </tr>
         {currentTaxRate > 0 && (
           <tr>
             <td colSpan="2"></td>
             <td className="summary-label">Tax ({ (currentTaxRate * 100).toFixed(0) }%)</td>
-            <td className="summary-value">&pound;{taxAmount.toFixed(2)}</td>
+            <td className="summary-value">&pound;{formatNumberWithCommas(taxAmount)}</td>
           </tr>
         )}
         <tr className="grand-total-row"> {/* Added class for specific styling if needed */}
           <td colSpan="2"></td>
           <td className="grand-total-label">Grand Total</td>
-          <td className="grand-total-value">&pound;{total.toFixed(2)}</td>
+          <td className="grand-total-value">&pound;{formatNumberWithCommas(total)}</td>
         </tr>
       </>
     );
@@ -41,9 +50,9 @@ function InvoiceTotals({ items, serviceCharge = 0, taxRate = 0, isTableView = fa
 
   return (
     <section className="invoice-totals">
-      <p><strong>Subtotal:</strong> &pound;{subtotal.toFixed(2)}</p>
-      {currentTaxRate > 0 && <p><strong>Tax ({ (currentTaxRate * 100).toFixed(0) }%):</strong> &pound;{taxAmount.toFixed(2)}</p>}
-      <p><strong>Total:</strong> &pound;{total.toFixed(2)}</p>
+      <p><strong>Subtotal:</strong> &pound;{formatNumberWithCommas(subtotal)}</p>
+      {currentTaxRate > 0 && <p><strong>Tax ({ (currentTaxRate * 100).toFixed(0) }%):</strong> &pound;{formatNumberWithCommas(taxAmount)}</p>}
+      <p><strong>Total:</strong> &pound;{formatNumberWithCommas(total)}</p>
     </section>
   );
 
