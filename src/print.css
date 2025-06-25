@@ -1,87 +1,125 @@
-/* src/print.css */
-
 @media print {
-  /* 1. Hide everything by default when print-active is on the body */
-  body.print-active > * {
-    display: none !important;
+ 
+  body * {
     visibility: hidden !important;
+    overflow: visible !important; /* Ensure content is not clipped */
+  
   }
 
-  /* 2. Explicitly show the structural path to your printable content */
-  /*    Adjust these selectors if your DOM structure is different. */
-  body.print-active .app-container,
-  body.print-active .app-container > .main-content,
-  body.print-active .main-content > .invoice-detail-page,
-  body.print-active .invoice-detail-page > .invoice-view-container {
-    display: block !important; /* Or their original display type */
+  /* 2. Make the main printable area and its children visible */
+  /* This targets the top-level container for your invoice view */
+  .invoice-detail-page.invoice-view-container,
+  .invoice-detail-page.invoice-view-container *,
+  .invoice-view-body-content,
+  .invoice-view-body-content *,
+  .digital-stamp-container,
+  .digital-stamp-container * {
     visibility: visible !important;
-    position: static !important;
-    width: 100% !important; /* Take full width of print page */
-    height: auto !important;
-    overflow: visible !important;
-    float: none !important;
+    display: block !important; /* Ensure block display for natural flow */
+    position: static !important; /* CRUCIAL: Allow content to break across pages */
     margin: 0 !important;
     padding: 0 !important;
-    background: none !important; /* Remove any screen backgrounds */
+    background-color: transparent !important; /* No background on elements */
     box-shadow: none !important;
     border: none !important;
+    color: #000 !important; /* Default text color to black */
+    overflow: visible !important; /* Crucial for multi-page content */
+  
   }
 
-  /* 3. Ensure the direct children of invoice-view-container are visible by default */
-  body.print-active .invoice-view-container > * {
-    display: block !important; /* Or their original display type */
+   /* 3. Specific adjustments for the main content area */
+  .invoice-view-body-content {
+    /* Re-apply padding from UI to the content that should be printed */
+    padding: 48px !important;
+    box-sizing: border-box !important;
+    width: 100% !important; /* Take full width */
+    /* Add padding to the bottom to make space for the fixed footer */
+    padding-bottom: 120px !important; /* Adjust as needed to prevent overlap */
+  }
+
+
+  /* 4. Style the fixed footer for each page */
+  .digital-stamp-container {
+    position: fixed !important;
+    bottom: 20px !important; /* Adjust as needed */
+    left: 0 !important;
+    width: 100% !important;
+    /* Padding for the footer itself, matching UI and content alignment */
+    padding: 1rem 48px !important;
+    box-sizing: border-box !important;
+    text-align: right !important; /* Align content to the right */
+    background-color: transparent !important; /* No background */
+    page-break-inside: avoid !important; /* Prevent footer from breaking across pages */
+  }
+
+ /* Ensure the image within the stamp container is visible and sized correctly */
+  .digital-stamp-container .digital-stamp {
     visibility: visible !important;
-    position: static !important;
+    display: inline-block !important; /* Or block, depending on desired flow */
+    width: 100px !important; /* Match UI size */
+    height: auto !important;
   }
 
-  /* 4. Now, specifically hide elements within the visible path that are NOT for print */
-  body.print-active .invoice-view-container .go-back-button,
-  body.print-active .invoice-view-header .invoice-view-actions,
-  body.print-active .invoice-view-header .status-info span:first-child, /* "Status" label */
-  body.print-active .ConfirmationModal, /* Assuming these are class names of modal roots */
-  body.print-active .SendOptionsModal {
+  /* Ensure text within the footer is visible */
+  .digital-stamp-container .footer-contact-info {
+    visibility: visible !important;
+    color: #000 !important; /* Ensure black text */
+  }
+
+  /* 5. Hide elements that are part of the UI but not the invoice content */
+  .invoice-view-header, /* The header with status and actions */
+  .go-back-button,
+  .invoice-view-actions,
+  .status-info span:first-child, /* "Status" label */
+  .modal-overlay,
+  .guide-message-overlay,
+  .main-footer, /* Assuming a global footer */
+  .global-side-nav, /* Assuming a global sidebar */
+  /* Hide other routes/elements that might be present in the main-content */
+  .app-container > .main-content > *:not(.invoice-detail-page) {
     display: none !important;
     visibility: hidden !important;
   }
 
-  /* 5. Style the printable header and body sections */
-  body.print-active .invoice-view-header,
-  body.print-active .invoice-view-body {
-    padding: 10mm !important; /* Print margins */
-    background-color: #fff !important; /* Ensure white background */
-    color: #000 !important; /* Ensure black text */
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    border: none !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
+  /* 6. General print styling for text and backgrounds */
+  body, html {
+    background-color: #fff !important;
+    -webkit-print-color-adjust: exact !important; /* For background colors */
+    print-color-adjust: exact !important;
   }
 
-  /* 6. Ensure all text within the printable area is black and backgrounds are transparent */
-  body.print-active .invoice-view-body *,
-  body.print-active .invoice-view-header * { /* Be careful with overly broad selectors like * */
+  /* Ensure all text is black and backgrounds are transparent within the printable area */
+  .invoice-view-body-content *,
+  .invoice-view-body-content {
     color: #000 !important;
     background-color: transparent !important;
     box-shadow: none !important;
   }
 
-  /* 7. Style the totals table footer for print */
-  body.print-active .invoice-items-data-table tfoot {
+  /* 7. Specific styling for the totals table footer */
+  .invoice-items-data-table tfoot {
     background-color: #f0f0f0 !important; /* Light grey for totals background */
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  body.print-active .invoice-items-data-table tfoot td {
-    color: #000 !important; /* Ensure text in footer is black */
+  .invoice-items-data-table tfoot td,
+  .invoice-items-data-table tfoot * {
+   color: #000 !important; /* Ensure text in footer is black */
   }
 
-  /* 8. Attempt to prevent unwanted page breaks */
-  body.print-active .invoice-view-body,
-  body.print-active .items-table-view,
-  body.print-active .invoice-items-data-table,
-  body.print-active tr,
-  body.print-active td,
-  body.print-active th {
-    page-break-inside: avoid;
+  /* 8. Prevent unwanted page breaks within elements */
+  .invoice-view-body,
+  .items-table-view,
+  .invoice-items-data-table,
+  tr,
+  td,
+  th,
+  .invoice-main-info,
+  .invoice-info-view,
+  .services-section,
+  .invoice-totals,
+  .notes-section {
+    page-break-inside: avoid !important;
   }
+  
 }

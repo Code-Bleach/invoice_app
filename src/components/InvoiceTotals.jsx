@@ -41,7 +41,7 @@ function InvoiceTotals({ items, serviceCharge = 0, taxRate = 0, isTableView = fa
         )}
         <tr className="grand-total-row"> {/* Added class for specific styling if needed */}
           <td colSpan="2"></td>
-          <td className="grand-total-label">Grand Total</td>
+          <td className="grand-total-label">Total</td>
           <td className="grand-total-value">&pound;{formatNumberWithCommas(total)}</td>
         </tr>
       </>

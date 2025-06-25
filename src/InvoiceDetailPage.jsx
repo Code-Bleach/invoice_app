@@ -355,15 +355,10 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
   };
 
   const handlePrintInvoice = () => {
+    // The new print.css handles all styling via @media print.
+    // We just need to trigger the browser's print dialog.
     if (invoiceViewRef.current) {
-      const performActualPrint = () => window.print();
-      const handleAfterPrint = () => {
-        document.body.classList.remove('print-active');
-        window.removeEventListener('afterprint', handleAfterPrint);
-      };
-      window.addEventListener('afterprint', handleAfterPrint);
-      document.body.classList.add('print-active');
-      requestAnimationFrame(() => requestAnimationFrame(performActualPrint));
+      window.print();
     } else {
       alert("Invoice content not available for printing. Please view the invoice first.");
     }

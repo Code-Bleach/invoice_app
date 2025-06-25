@@ -5,6 +5,7 @@ import InvoiceDetailPage from './InvoiceDetailPage';
 import GlobalSideNav from './components/GlobalSideNav';
 import { getInvoices, addInvoice as apiAddInvoice, updateInvoice as apiUpdateInvoice, deleteInvoice as apiDeleteInvoice } from './api/invoices';
 import './AppLayout.css'; // CSS for the overall app layout
+import './print.css'; // Import print-specific styles
 
 const LOCAL_STORAGE_KEY_THEME = 'appTheme';
 

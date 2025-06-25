@@ -38,6 +38,7 @@
 
 .invoice-list-item .client-name {
   color: var(--text-secondary);
+  text-transform: capitalize;
   text-align: left; /* Or right if preferred */
   grid-column: 2 / 3;
   grid-row: 1 / 3; /* Span both rows if due date is below ID */
