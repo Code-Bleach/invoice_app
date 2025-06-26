@@ -248,10 +248,9 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
       // Function to add styled footer to each page
       const addFooterToPage = () => {
         const footerTopY = pageHeight - 20; // Start footer 30mm from bottom
-        const footerPadding = 10; // 10mm padding from left/right edges
+        const footerHeight = 20; // The height of our footer area (still used for content positioning)
+        const footerPadding = 60; // 10mm padding from left/right edges
         const contentPadding = 5; // 5mm internal padding
-  
-        // --- NO DASHED BORDER - Removed pdf.setLineDashPattern and pdf.rect ---
   
         // --- Prepare Content ---
         const stampSize = 25; // Increased size to match UI's 100px (approx 25mm)
@@ -262,11 +261,10 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
         pdf.setFontSize(contactFontSize);
         const textWidth = pdf.getTextWidth(footerText);
   
-        // --- Position Content (Right Aligned) ---
-        const containerRightEdge = imgWidth - footerPadding - contentPadding;
-        const textX = containerRightEdge - textWidth;
-        const stampX = textX - contentPadding - stampSize;
-        const contentY = footerTopY + (20 / 2); // Mid-point of the container's height
+        // 2. Position Content (Left Aligned with padding)
+        const stampX = footerPadding; // Start stamp from the left padding
+        const textX = stampX + stampSize + contentPadding; // Text starts after stamp + internal padding
+        const contentY = footerTopY + (footerHeight / 2); // Mid-point of the container's height
         const stampY = contentY - (stampSize / 2);
         const textY = contentY + (contactFontSize * 0.35 / 2); // Adjust for text baseline
   
@@ -355,10 +353,29 @@ const closeFormAndNavigate = (path = '/', navigationState = {}) => { // Ensure n
   };
 
   const handlePrintInvoice = () => {
-    // The new print.css handles all styling via @media print.
-    // We just need to trigger the browser's print dialog.
+    // Instead of using window.print() on the HTML,
+    // we'll generate the PDF and then open it in a new tab for printing.
     if (invoiceViewRef.current) {
-      window.print();
+      generatePDF(formData, invoiceViewRef.current, true) // Generate PDF as a blob
+        .then(pdfBlob => {
+          if (pdfBlob) {
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            const printWindow = window.open(pdfUrl, '_blank'); // Open in a new tab for the PDF
+            printWindow.onload = () => {
+              printWindow.print();
+              // Use addEventListener for more robust event handling
+              printWindow.addEventListener('afterprint', () => {
+                // Add a small delay before closing to ensure the print dialog fully dismisses
+                // This can sometimes help with browser security restrictions
+                setTimeout(() => {
+                printWindow.close();
+                }, 100); // 100ms delay
+              });
+              URL.revokeObjectURL(pdfUrl); // Clean up the URL object after printing
+            };
+          }
+        })
+        .catch(error => console.error("Error generating PDF for print:", error));
     } else {
       alert("Invoice content not available for printing. Please view the invoice first.");
     }

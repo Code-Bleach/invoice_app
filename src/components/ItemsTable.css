@@ -68,7 +68,7 @@
 
 /* Styles for View Mode Table */
 .items-table-view {
-  margin-top: 40px; /* Space above the items table section */
+  margin-top: auto 0; /* Space above the items table section */
 }
 
 .items-table-view .table-container {
@@ -89,7 +89,7 @@
 .invoice-items-data-table th {
   font-size: 11px; /* 0.6875rem */
   color: var(--color-text-secondary, #7E88C3);
-  padding-bottom: 16px; /* Space below header text */
+  padding-bottom: 1px; /* Space below header text */
   text-align: left;
   font-weight: 500;
 }
@@ -108,7 +108,7 @@
   font-size: 12px; /* 0.75rem */
   font-weight: bold;
   color: var(--color-text-primary, #0C0E16);
-  padding: 16px 0; /* Space above/below item rows */
+  padding: auto 0; /* Space above/below item rows */
   border-bottom: 1px solid transparent; /* For spacing, or use actual border if needed */
 }
 
@@ -138,13 +138,11 @@
   background-color: var(--color-total-bg-dark, #0C0E16);
 }
 .invoice-items-data-table tfoot td { /* Apply padding to all footer cells */
-  padding: 24px; 
+  padding: auto 0; 
   /* Reset default td styles that might conflict */
   border-bottom: none; 
   color: inherit; /* Inherit color from tfoot */
   /* Ensure consistent padding for all footer rows */
-  padding-top: 12px; /* Adjust padding for sub-lines */
-  padding-bottom: 12px; /* Adjust padding for sub-lines */
 }
 
 /* Styling for Subtotal and Tax lines in the footer */
@@ -168,8 +166,7 @@
 
 /* Ensure the grand total row itself has enough padding if sub-lines are present */
 .invoice-items-data-table tfoot tr.grand-total-row td {
-  padding-top: 16px; /* More top padding for grand total line */
-  padding-bottom: 24px; /* Keep bottom padding */
+  padding: auto 0;  
 }
 .invoice-items-data-table tfoot td.grand-total-label {
   text-align: left;

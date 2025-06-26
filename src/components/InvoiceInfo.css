@@ -17,12 +17,6 @@
   gap: 20px; /* Space between Invoice Date and Payment Due */
 }
 
-.invoice-date-group,
-.payment-due-group,
-.bill-to-group,
-.client-email-group {
-}
-
 .meta-label {
   font-size: 12px; /* 0.75rem */
   color: var(--color-text-secondary, #7E88C3);
@@ -53,10 +47,6 @@
 }
 
 /* Dark theme adjustments for invoice-info-view if needed */
-.theme-dark .invoice-info-view {
-  /* No specific background for this component itself, it sits in invoice-view-body */
-}
-
 .theme-dark .meta-label,
 .theme-dark .client-address {
   color: #adb5bd;

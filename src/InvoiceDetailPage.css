@@ -252,7 +252,6 @@
 .invoice-main-info {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 .id-description {
@@ -283,8 +282,6 @@
 
 /* Logo in Invoice View Document */
 .invoice-view-logo-header {
-  margin-bottom: 20px;
-  /* background-color: #1E2139; */
   padding: 10px 10px;
 }
 .invoice-document-logo {
@@ -386,41 +383,7 @@
 
 /* Styles for the PDF generation (print media) */
 /* These styles ensure the PDF output looks clean */
-@media print {
-    body {
-        background-color: #fff !important; /* Ensure white background for print */
-    }
-    .invoice-detail-page {
-        padding: 0 !important;
-        margin: 0 !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-    }
-    .invoice-view-header,
-    .actions-container,
-    .modal-overlay,
-    .guide-message-overlay,
-    .main-footer, /* Ensure the main app footer is hidden */
-    .go-back-button {
-        display: none !important; /* Hide UI elements not needed in print */
-    }
-    /* Ensure the main content takes full width */
-    .invoice-view-container {
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-    }
-    /* Ensure the content captured by html2canvas is not affected by other elements */
-    .invoice-view-body-content {
-        padding: 48px; /* Re-apply padding if needed for the captured content */
-    }
-    /* Hide the on-screen digital stamp container during print, as it's manually added to PDF */
-    .digital-stamp-container {
-        display: none !important;
-    }
-}
+
 
 /* ... guide message ... */
 
